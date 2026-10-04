@@ -1,0 +1,99 @@
+/**
+ * 個案資料卡產生器 - A4 橫式列印專用樣式表 V2.1 (Print CSS)
+ * 嚴格保證 100% A4 橫向單頁 (297mm x 210mm)，無任何網頁控制項與邊界雜訊
+ */
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 隱藏所有網頁介面元件 */
+  .app-header,
+  .form-column,
+  .preview-header-bar,
+  .preview-actions-bar,
+  .modal-overlay,
+  .fit-status,
+  .fit-warning-banner,
+  .btn,
+  .no-print,
+  #export-loading-indicator {
+    display: none !important;
+  }
+
+  /* 展開預覽區至滿版 */
+  .app-container,
+  .preview-column,
+  .card-preview-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* A4 卡片本體滿版定位 */
+  .card-a4-page {
+    width: 297mm !important;
+    height: 210mm !important;
+    max-width: 297mm !important;
+    max-height: 210mm !important;
+    margin: 0 !important;
+    padding: 16mm 20mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-sizing: border-box !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    background-color: #fffdf7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .card-content {
+    width: 100% !important;
+    height: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .card-body-grid {
+    height: 100% !important;
+  }
+
+  .card-column {
+    justify-content: space-between !important;
+    height: 100% !important;
+  }
+
+  /* 確保底色與邊框列印時清晰 */
+  .care-section-card {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: #fffdf7 !important;
+    border: 1px solid #eadbc7 !important;
+    border-left: 5px solid #24483a !important;
+  }
+
+  .care-section-card.section-precautions {
+    background-color: #fff8ec !important;
+    border-left-color: #b5441b !important;
+  }
+}

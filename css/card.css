@@ -1,0 +1,571 @@
+/**
+ * 個案資料卡產生器 - A4 橫式卡片樣式表 V2.2 (Card CSS)
+ * 完美還原參考原型：綠色膠囊標題 (深綠色圓角底) + 右側橙色第二語言標題 + 雙欄左右對稱項目
+ * 右上角設有照護暖心標語泡泡 (可切換)
+ */
+
+:root {
+  --forest-green: #2e7d32;
+  --forest-light: #e8f5e9;
+  --forest-border: #a5d6a7;
+  --warm-orange: #c05621;
+  --warm-orange-light: #fffaf0;
+  --card-paper: #ffffff;
+  --card-text: #1e293b;
+  --card-border: #cbd5e1;
+  --bubble-bg: #fff1f2;
+  --bubble-border: #f472b6;
+  --bubble-text: #9f1239;
+  --bubble-icon: #e11d48;
+}
+
+/* 預覽外圍容器 (支援等比例縮放適配螢幕，絕不裁切底端) */
+.card-preview-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px 0;
+  overflow: visible;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* A4 橫向卡片本體 (固定 1123px x 794px，與 PDF 輸出 100% 像素級吻合) */
+.card-a4-page {
+  width: 1123px;
+  height: 794px;
+  min-width: 1123px;
+  min-height: 794px;
+  max-width: 1123px;
+  max-height: 794px;
+  background-color: var(--card-paper);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(46, 125, 50, 0.08);
+  border-radius: 6px;
+  box-sizing: border-box;
+  padding: 10px 28px 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid #e2e8f0;
+  border-bottom: 6px solid #81c784;
+  color: var(--card-text);
+  transform-origin: top center;
+}
+
+.card-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  transition: transform 0.2s ease;
+}
+
+/* -------------------------------------------------------------
+ * 1. 頂部 Header：大頭貼 (長寬各多1/3) + 2倍大姓名/性別 + 最右上角2倍大照護標語
+ * ------------------------------------------------------------- */
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  border-bottom: 2px solid #cbd5e1; /* 實線分隔線 */
+  padding-bottom: 8px; /* 實線上間距放寬，保證外語病史下緣字體絕不被遮擋 */
+  margin-bottom: 4px;  /* 往下調降，將下面版面往下移動拉開距離 */
+}
+
+.card-header-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px;
+}
+
+.card-header-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+/* 寬版大頭貼外框 (尺寸嚴格鎖定 334px x 254px，任何 fit-level 等級與排版規則均不得異動) */
+.card-photo-box {
+  width: 334px !important;
+  height: 254px !important;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #f8fafc;
+  border: 2px solid #cbd5e1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.card-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 名字位置固定大頭照旁邊右上 */
+.card-identity-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-top: 0px; /* 緊鄰大頭照右上頂端 */
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.card-name-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: nowrap; /* 確保姓名與性別符號同行固定，絕不拆行跑位 */
+  white-space: nowrap;
+}
+
+/* 姓名字體大兩倍 (68px 超大醒目粗體) */
+.card-resident-name {
+  font-size: 68px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 2px;
+  line-height: 1.0;
+  margin: 0;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+/* 性別符號大小跟姓名一樣 (68px)，固定放於姓名旁邊 */
+.card-gender-badge {
+  font-size: 68px;
+  font-weight: 900;
+  line-height: 1.0;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.card-gender-female { color: #dc2626; }
+.card-gender-male { color: #2563eb; }
+
+.card-name-secondary {
+  font-size: 50px; /* 越南文姓名加大 2 號 */
+  font-style: italic;
+  font-weight: 700;
+  color: var(--warm-orange);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+/* 頂部 Header 病史區塊 (固定放在大頭照旁邊右下，分三行展示) */
+.card-header-med-box {
+  width: 100%;
+  margin-top: 8px; /* 確保垂直安全間距，絕對不與上方名言重疊 */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+
+/* 第一行：病史標題 (字體變大多 2 號：31px 膠囊 + 27px 圖示與外語標題) */
+.med-row-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1.2;
+}
+
+.med-row-header .header-badge-green {
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1.5px solid #bbf7d0;
+  padding: 3px 16px;
+  border-radius: 9999px;
+  font-size: 31px; /* 原 29px 變大多 2 號 -> 31px！ */
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(22, 101, 52, 0.08);
+  flex-shrink: 0;
+}
+
+.med-row-header .header-badge-green .header-icon {
+  font-size: 27px; /* 原 25px 變大多 2 號 -> 27px！ */
+}
+
+.med-row-header .header-title-orange {
+  font-size: 27px; /* 原 25px 變大多 2 號 -> 27px！ */
+  font-weight: 800;
+  color: var(--warm-orange);
+  font-style: italic;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* 中文與外語疾病史合併最多 2 行；內容源頭已限制為兩項，避免縮小字級。 */
+.med-combined-wrap {
+  width: 100%;
+  margin-top: 3px;
+  min-width: 0;
+}
+
+.med-combined-box {
+  width: 100%;
+  font-size: 34px; /* 中文疾病史預設 34px */
+  line-height: 1.25;
+  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 中文與外語合併最多 2 行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  letter-spacing: 0.3px;
+  padding-bottom: 2px;
+}
+
+.med-inline-zh {
+  font-size: 34px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 0.5px;
+}
+
+.med-inline-trans {
+  font-size: 32px; /* 疾病史外語字體預設 32 號字 */
+  font-weight: 700;
+  color: var(--warm-orange);
+  font-style: italic;
+  letter-spacing: 0.2px;
+}
+
+.second-lang-disabled .med-inline-trans {
+  display: none !important;
+}
+
+/* 最右上角隨機人生名言標籤 (淡粉色主題 + 圓角 + 溫暖手寫感字體最多3行 + 雙粉色手繪底線) */
+.card-header-right {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  align-self: flex-start;
+  margin-top: -2px;
+  margin-right: -2px;
+  flex-shrink: 0;
+  max-width: 45%;
+}
+
+.slogan-bubble {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+  border: 1.5px solid #fecdd3;
+  padding: 6px 16px 8px 14px;
+  border-radius: 20px; /* 大幅圓角，溫暖療癒感 */
+  color: #9f1239; /* 淡粉色主題深紅高對比字色 */
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.08), 0 1px 3px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  max-width: 480px;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.slogan-bubble:hover {
+  transform: translateY(-2px);
+
+  background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.15);
+}
+
+.slogan-icon {
+  font-size: 42px;
+  line-height: 1;
+  color: #e11d48;
+  filter: drop-shadow(0 2px 3px rgba(225, 29, 72, 0.18));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slogan-text-container {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.slogan-single-line-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  width: 100%;
+}
+
+.slogan-last-line-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+}
+
+.slogan-last-line-wrapper.offset {
+  margin-left: 10px; /* 兩行時，第二行微向右錯開排版 */
+}
+
+/* 統一名言字體大小 (放大多4號：26px) */
+.slogan-line {
+  font-family: 'DFKai-SB', 'BiauKai', 'STKaiti', 'KaiTi', 'PingFang TC', 'Microsoft JhengHei', cursive, sans-serif;
+  font-weight: 700;
+  color: #9f1239; /* 淡粉色主題字色 */
+  letter-spacing: 0.8px;
+  line-height: 1.25;
+  white-space: nowrap;
+  font-size: 26px;
+}
+
+.slogan-line.single-line {
+  font-size: 26px;
+}
+
+.slogan-line.multi-line {
+  font-size: 26px;
+}
+
+
+/* 稍微傾斜、不規則的粉色手繪雙底線 */
+.slogan-handdrawn-lines {
+  width: 100%;
+  height: 12px;
+  margin-top: 2px;
+  display: block;
+  overflow: visible;
+  transform: rotate(-0.8deg); /* 微傾斜手繪感 */
+  transform-origin: left center;
+}
+
+/* -------------------------------------------------------------
+ * 2. 照護資訊雙欄區塊 (模板 A：垂直自適應展開，資料少時均勻呼吸、資料多時智慧收縮)
+ * ------------------------------------------------------------- */
+.card-body-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 28px; /* 適度拉大間距，消除擁擠感 */
+  flex: 1;
+  height: 100%;
+}
+
+.card-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  gap: 6px;
+}
+
+/* 單個照護區塊卡片 */
+.care-block-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px; /* 標題與內容上下間距適度拉大 */
+  background-color: transparent;
+}
+
+/* 區塊間淡雅細線分隔 (提升各照護項目視覺獨立性，防止看錯行) */
+.care-block-card + .care-block-card {
+  border-top: 1.5px dashed #cbd5e1;
+  padding-top: 6px;
+}
+
+.care-item-zh.is-sub-item,
+.care-item-trans.is-sub-item {
+  margin-top: -3px;
+}
+
+/* 板塊頂部標題列 (左淡綠膠囊標籤，右側外語標題同樣靠左對齊) */
+.care-block-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 6px 14px;
+  align-items: center;
+  margin-bottom: 0px;
+}
+
+/* 淡綠色膠囊標籤 (大1.5倍：29px 超醒目大字級) */
+.header-badge-green {
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1.5px solid #bbf7d0;
+  padding: 3px 15px;
+  border-radius: 9999px;
+  font-size: 29px; /* 綠色標題大 1.5 倍！ */
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 1px 3px rgba(22, 101, 52, 0.08);
+  justify-self: start;
+}
+
+.header-badge-green .header-icon {
+  font-size: 25px;
+}
+
+.header-title-orange {
+  font-size: 25px; /* 外語標題同步放大 */
+  font-weight: 800;
+  color: var(--warm-orange);
+  font-style: italic;
+  text-align: left; /* 靠左對齊！與下方外語條目垂直對齊 */
+  justify-self: start;
+  line-height: 1.2;
+}
+
+/* 項目主體 (雙語對稱網格，超大清晰字級，絕不重疊) */
+.care-block-body.bilingual-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 4px 16px;
+  padding-left: 4px;
+}
+
+.care-block-body.single-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-left: 4px;
+}
+
+.body-col-zh,
+.body-col-trans {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* 中文照護項目 (字體大1.5倍：29px，自然換行不折損排版) */
+.care-item-zh {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 29px; /* 內容字體大 1.5 倍！ */
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.24;
+  letter-spacing: 0.5px;
+}
+
+.care-item-zh .item-text {
+  flex: 1;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* 外語照護項目 (字體大1.5倍：23px) */
+.care-item-trans {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 23px; /* 內容字體大 1.5 倍！ */
+  font-weight: 700;
+  color: var(--warm-orange);
+  line-height: 1.22;
+}
+
+.care-item-trans .item-text {
+  flex: 1;
+  word-break: break-word;
+  white-space: normal; /* 甚至換行沒關係！ */
+}
+
+.bullet-dot-zh,
+.bullet-dot.green {
+  color: #16a34a;
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1.35;
+}
+
+.bullet-dot-trans,
+.bullet-dot.orange {
+  color: var(--warm-orange);
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1.35;
+}
+
+.care-item-zh.empty {
+  color: #94a3b8;
+  font-weight: normal;
+  font-size: 24px;
+}
+
+/* -------------------------------------------------------------
+ * 3. 語言切換自適應控制
+ * ------------------------------------------------------------- */
+.second-lang-disabled .header-title-orange,
+.second-lang-disabled .body-col-trans,
+.second-lang-disabled .card-name-secondary {
+  display: none !important;
+}
+
+.second-lang-disabled .care-block-header {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.second-lang-disabled .care-block-body.bilingual-grid {
+  grid-template-columns: 1fr;
+}
+
+.second-lang-disabled .care-item-zh {
+  font-size: 40px;
+}
+
+.second-lang-disabled .header-badge-green {
+  font-size: 38px;
+  padding: 6px 22px;
+}
+
+/* -------------------------------------------------------------
+ * 4. 適版等級微調 (維持單頁最佳排版：中外語獨立自主調節，外語優先適應，中文保證大字級)
+ * ------------------------------------------------------------- */
+.fit-level-1 .care-block-body.bilingual-grid { gap: 2px 14px; }
+.fit-level-1 .care-block-card + .care-block-card { padding-top: 4px; }
+.fit-level-1 .care-item-trans { font-size: 20px !important; }
+.fit-level-1 .care-item-zh { font-size: 28px !important; }
+.fit-level-2 .care-block-card + .care-block-card { padding-top: 3px; }
+.fit-level-2 .care-item-trans { font-size: 19px !important; }
+.fit-level-2 .care-item-zh { font-size: 27px !important; line-height: 1.2; }
+.fit-level-2 .header-badge-green { font-size: 27px; padding: 2px 14px; }
+.fit-level-3 .care-block-card + .care-block-card { padding-top: 2px; }
+.fit-level-3 .care-item-trans { font-size: 17.5px !important; }
+.fit-level-3 .care-item-zh { font-size: 26px !important; }
+.fit-level-3 .header-title-orange { font-size: 22px; }
+.fit-level-4 .care-item-trans { font-size: 16px !important; }
+.fit-level-4 .care-item-zh { font-size: 24px !important; }
+.fit-level-4 .header-badge-green { font-size: 25px; padding: 2px 10px; }
+/* 大頭照區塊尺寸鎖定嚴禁異動，fit-level 僅微調照護文字字級 */
+.fit-level-5 .care-item-trans { font-size: 15px !important; }
+.fit-level-5 .care-item-zh { font-size: 22px !important; }
+.fit-level-6 .card-resident-name { font-size: 48px; }
+.fit-level-6 .care-item-trans { font-size: 14px !important; }
+.fit-level-6 .care-item-zh { font-size: 20px !important; }
+
