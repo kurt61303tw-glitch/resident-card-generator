@@ -1,0 +1,21 @@
+# Local and editor artifacts must never be published.
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.log
+scratch/
+.codex-backups/
+
+# Never commit credentials or user-provided care records.
+.env
+.env.*
+*.key
+*.pem
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx

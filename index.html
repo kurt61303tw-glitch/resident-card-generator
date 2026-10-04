@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>個案資料卡產生器</title>
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/card.css" />
+  <link rel="stylesheet" href="css/print.css" />
+</head>
+<body>
+
+  <!-- 頂部功能列 -->
+  <header class="app-header">
+    <div class="brand-section">
+      <img src="assets/logo.jpg" alt="WGH Logo" class="brand-logo-img" onerror="this.style.display='none'" />
+      <div class="brand-info">
+        <h1>個案資料卡產生器</h1>
+        <p>依照填寫內容，自動整理成一張可閱讀、可下載列印的完整個案資料卡。</p>
+      </div>
+    </div>
+    <div class="header-actions" style="display: flex; align-items: center; gap: 10px;">
+      <button type="button" class="guide-open-btn" id="guideOpenBtn" aria-haspopup="dialog" aria-controls="guideDialog">ⓘ 使用說明</button>
+    </div>
+  </header>
+
+  <!-- 主版面：左側編輯 (大字級) + 右側即時預覽 -->
+  <main class="app-container">
+
+    <!-- 左側編輯表單欄 -->
+    <aside class="form-column">
+      
+      <!-- 獨立快捷操作列：一鍵開新個案 -->
+      <div class="case-header-actions" style="margin-bottom: 12px;">
+        <button type="button" id="btn-clear-form" class="btn-clear-form-standalone" style="width: 100%; justify-content: center; padding: 12px 18px; font-size: 16px; border-radius: 12px; font-weight: 800; min-height: 48px; box-sizing: border-box;" title="清空所有欄位資料，重新建立新個案">
+          <span class="btn-clear-icon" style="font-size: 20px; line-height: 1;">🧹</span>
+          <span class="btn-clear-label" style="font-weight: 800; font-size: 16px;">一鍵開新個案（清空表單）</span>
+        </button>
+      </div>
+
+      <!-- ✨ AI 智慧輔助按鈕 (出院病摘／相關資料自動辨識) -->
+      <div style="margin-bottom: 12px;">
+        <div class="global-ai-btn-wrap" style="width: 100%; display: flex; align-items: center; gap: 8px;">
+          <button type="button" class="btn-global-ai-toggle" id="btn-open-ai-modal" style="flex: 1; justify-content: center; padding: 12px 18px; font-size: 16px; border-radius: 12px; font-weight: 800; min-height: 48px; box-sizing: border-box;" title="點擊開啟「✨ AI 智慧輔助（出院病摘／相關資料自動辨識）」視窗">
+            <span class="ai-sparkle-icon" style="font-size: 20px; line-height: 1;">✨</span>
+            <span class="ai-toggle-text" style="font-weight: 800; font-size: 16px;">AI 智慧輔助（出院病摘／相關資料自動辨識）</span>
+          </button>
+          <span class="ai-outer-progress hidden" id="globalAiOuterProgress" aria-live="polite" style="display: none;">
+            <span class="ai-outer-spinner"></span>
+            <span class="ai-outer-pct" id="globalAiOuterPct">0%</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- AI 辨識提醒常駐橫幅（點擊可重開待確認提醒視窗） -->
+      <div class="ai-uncertainty-banner" id="ai-banner-notification" role="alert" style="display: none; cursor: pointer; margin-bottom: 14px;">
+        <span class="ai-uncertainty-banner-icon">⚠️</span>
+        <div class="ai-uncertainty-banner-text" style="flex: 1; font-size: 14px; line-height: 1.5; color: #783313;">
+          <strong>AI 辨識提醒：</strong>發現 <span id="aiUncertaintyCountBadge" style="color: #b5441b; font-weight: 900;">0</span> 項臨床需核對內容，請護理與照服夥伴落實核對。
+        </div>
+        <button type="button" class="btn btn-outline btn-reopen-uncertainties" id="aiReopenUncertaintiesBtn" style="border: 1.5px solid #d56f22; background: #fff; color: #872e0a; font-weight: 800; border-radius: 8px; padding: 5px 12px; cursor: pointer; white-space: nowrap; font-size: 13.5px;">查看待確認事項</button>
+      </div>
+
+      <!-- 0. 照護第二語言設定 (置於最頂部，方便優先切換) -->
+      <section class="form-card" style="border: 1.5px solid #a5d6a7; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);">
+        <div class="form-card-header">
+          <span class="form-card-title">🌐 照護第二語言設定</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="select-language-mode">照護第二語言（預設以越南語）</label>
+          <select id="select-language-mode" class="form-select" style="font-weight: 700; font-size: 15px;">
+            <option value="vi" selected>繁體中文 ＋ 越南語 (Tiếng Việt)</option>
+            <option value="en">繁體中文 ＋ 英語 (English)</option>
+            <option value="id">繁體中文 ＋ 印尼語 (Bahasa Indonesia)</option>
+            <option value="fil">繁體中文 ＋ 菲律賓語 (Tagalog)</option>
+            <option value="th">繁體中文 ＋ 泰語 (ภาษาไทย)</option>
+            <option value="zh-only">僅繁體中文（大字號）</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- 1. 基本資料 -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title">👤 基本資料</span>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label" for="input-name-zh"><span class="required-star">*</span> 中文姓名</label>
+            <input type="text" id="input-name-zh" class="form-input" value="" placeholder="請輸入姓名" />
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span class="required-star">*</span> 性別</label>
+            <div class="gender-radio-group">
+              <label class="gender-radio-btn male">
+                <input type="radio" name="gender" value="男" />
+                <span>♂ 男</span>
+              </label>
+              <label class="gender-radio-btn female">
+                <input type="radio" name="gender" value="女" />
+                <span>♀ 女</span>
+              </label>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="form-label" for="input-name-secondary">
+            <span>第二語言姓名翻譯<span class="optional-tag">（非必填）</span></span>
+          </label>
+          <input type="text" id="input-name-secondary" class="form-input" value="" placeholder="可手動輸入第二語言姓名翻譯（非必填，可留空）" aria-describedby="name-secondary-hint" />
+          <p id="name-secondary-hint" role="status" aria-live="polite" hidden style="margin:6px 0 0;color:#dc2626;font-size:15px;font-weight:800;line-height:1.5;"></p>
+        </div>
+      </section>
+
+      <!-- 2. 照片系統 (275x194 寬版大頭貼) -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title">📷 住民照片 (大頭貼)</span>
+        </div>
+        <div class="photo-uploader-box">
+          <div class="photo-thumb-preview">
+            <img id="photo-thumb-img" src="" alt="縮圖預覽" />
+          </div>
+          <div class="photo-upload-controls" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/webp" style="display: none;" />
+            <button type="button" id="btn-upload-photo" class="btn btn-secondary btn-sm">
+              📁 選擇照片上傳...
+            </button>
+            <button type="button" id="btn-edit-photo" class="btn btn-secondary btn-sm" style="display: none; font-weight: 700; color: #166534; border-color: #86efac;">
+              ✂ 編輯完整原圖 / 重新裁切
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 卡片名言 -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title">☘ 卡片名言</span>
+          <button type="button" id="btn-open-quote-modal" class="btn btn-secondary btn-sm" style="font-size: 14px; padding: 4px 10px; font-weight: 700; color: #166534; border-color: #86efac;">
+            ⚙ 詞庫管理
+          </button>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="select-card-quote">當前名言</label>
+          <div style="display: flex; gap: 8px;">
+            <select id="select-card-quote" class="form-select" style="flex: 1; font-weight: 700; font-size: 18px;"></select>
+            <button type="button" id="btn-quote-random" class="btn btn-secondary btn-sm" title="隨機換一句" style="white-space: nowrap; padding: 0 14px; font-weight: 800;">
+              🎲 隨機
+            </button>
+          </div>
+          <small class="form-hint" style="color: #334155; font-size: 16px; font-weight: 600; margin-top: 6px; display: block;">
+            * 點選「⚙ 詞庫管理」可自由增加、編輯或刪除辭庫；亦可直接點擊卡片右上角標籤即時切換。
+          </small>
+        </div>
+      </section>
+
+      <!-- 4. 疾病史 (3 個自由填寫欄位) -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title">🩺 疾病史</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <span><span class="required-star">*</span> 主要疾病</span>
+          </label>
+          <div id="med-inputs-container" style="display: flex; flex-direction: column; gap: 8px; padding: 4px; border-radius: 8px;">
+            <input type="text" id="input-med-1" class="form-input" placeholder="主要疾病 1（例如：高血壓）" />
+            <input type="text" id="input-med-2" class="form-input" placeholder="主要疾病 2（例如：糖尿病）" />
+            <input type="text" id="input-med-3" class="form-input" placeholder="主要疾病 3（例如：腦中風）" />
+          </div>
+          <small class="form-hint form-hint-prominent">
+            * 可手動填寫或點擊下方快捷按鈕帶入；亦可輸入「無特殊病史」。
+          </small>
+        </div>
+        <div>
+          <small class="form-hint" style="color: #166534; font-size: 16px; font-weight: 800; display: block; margin-top: 8px; margin-bottom: 6px;">快捷點選加入（含三高與長照常見病史）：</small>
+          <div class="quick-btn-group">
+            <button type="button" class="btn-quick-med" data-med="高血壓">高血壓</button>
+            <button type="button" class="btn-quick-med" data-med="高血脂">高血脂</button>
+            <button type="button" class="btn-quick-med" data-med="糖尿病">糖尿病</button>
+            <button type="button" class="btn-quick-med" data-med="心臟病">心臟病</button>
+            <button type="button" class="btn-quick-med" data-med="腦中風">腦中風</button>
+            <button type="button" class="btn-quick-med" data-med="失智症">失智症</button>
+            <button type="button" class="btn-quick-med" data-med="癌症">癌症</button>
+            <button type="button" class="btn-quick-med" data-med="心律不整">心律不整</button>
+            <button type="button" class="btn-quick-med" data-med="慢性腎臟病">慢性腎臟病</button>
+            <button type="button" class="btn-quick-med" data-med="痛風">痛風</button>
+            <button type="button" class="btn-quick-med" data-med="骨質疏鬆">骨質疏鬆</button>
+            <button type="button" class="btn-quick-med" data-med="氣喘">氣喘</button>
+            <button type="button" class="btn-quick-med" data-med="無特殊病史">無特殊病史</button>
+          </div>
+        </div>
+
+        <!-- 允許自動聯網翻譯未收錄疾病與各項照護欄位 (預設勾選) -->
+        <div style="margin-top: 12px; padding: 8px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+          <label class="checkbox-label" style="font-size: 13.5px; color: var(--forest-2); font-weight: 750; display: inline-flex; align-items: center; gap: 7px; cursor: pointer;">
+            <input type="checkbox" id="checkbox-enable-online-translation" checked />
+            <span>🌐 允許自動聯網翻譯未收錄之疾病與各項照護欄位（不含個資）</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- 4. 外表意識 (依上傳圖樣採橫向單選排版) -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title"><span class="required-star">*</span> 👁 外表意識</span>
+        </div>
+        <div class="form-group">
+          <div class="consciousness-radio-group">
+            <label class="radio-item"><input type="radio" name="consciousness" value="清醒" /><span>清醒</span></label>
+            <label class="radio-item"><input type="radio" name="consciousness" value="混亂" /><span>混亂</span></label>
+            <label class="radio-item"><input type="radio" name="consciousness" value="譫妄" /><span>譫妄</span></label>
+            <label class="radio-item"><input type="radio" name="consciousness" value="嗜睡" /><span>嗜睡</span></label>
+            <label class="radio-item"><input type="radio" name="consciousness" value="木僵" /><span>木僵</span></label>
+            <label class="radio-item"><input type="radio" name="consciousness" value="昏迷" /><span>昏迷</span></label>
+            <label class="radio-item"><input type="radio" name="consciousness" value="半昏迷" /><span>半昏迷</span></label>
+            <label class="radio-item"><input type="radio" name="consciousness" value="植物人" /><span>植物人</span></label>
+            <label class="radio-item"><input type="radio" name="consciousness" value="其他" /><span>其他</span></label>
+          </div>
+          <input type="text" id="input-consciousness-other" class="form-input" placeholder="請輸入其他意識狀態（例如：無法評估-失語症）" style="display: none; margin-top: 10px;" />
+        </div>
+      </section>
+
+      <!-- 5. 聽力與視力評估 (放在外表意識下方) -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title">👂 聽力與視力評估</span>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label" for="select-sensory-hearing"><span class="required-star">*</span> 聽力狀態</label>
+            <select id="select-sensory-hearing" class="form-select">
+              <option value="" selected disabled>-- 請選擇聽力狀態 --</option>
+              <option value="正常">聽力正常</option>
+              <option value="輕度重聽">輕度重聽</option>
+              <option value="重聽">重聽</option>
+              <option value="需戴助聽器">需戴助聽器</option>
+              <option value="需大聲說話">需大聲說話</option>
+              <option value="嚴重重聽">嚴重重聽</option>
+              <option value="全聾">全聾</option>
+              <option value="其他">其他 (自行輸入)</option>
+            </select>
+            <input type="text" id="input-sensory-hearing-other" class="form-input" placeholder="請輸入聽力狀況說明" style="display: none; margin-top: 6px;" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="select-sensory-vision"><span class="required-star">*</span> 視力狀態</label>
+            <select id="select-sensory-vision" class="form-select">
+              <option value="" selected disabled>-- 請選擇視力狀態 --</option>
+              <option value="正常">視力正常</option>
+              <option value="視力模糊退化">視力模糊退化</option>
+              <option value="需戴眼鏡">需戴眼鏡</option>
+              <option value="白內障">白內障</option>
+              <option value="青光眼">青光眼</option>
+              <option value="弱視">弱視</option>
+              <option value="單眼失明">單眼失明</option>
+              <option value="全盲">全盲</option>
+              <option value="其他">其他 (自行輸入)</option>
+            </select>
+            <input type="text" id="input-sensory-vision-other" class="form-input" placeholder="請輸入視力狀況說明" style="display: none; margin-top: 6px;" />
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. 重要注意事項 (豐富預設項目 + 其他輸入框) -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title">⚠ 重要注意事項</span>
+        </div>
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="margin-bottom: 0;"><span class="required-star">*</span> 照護重點（可複選，以主要 3 項為限）</label>
+            <span id="precaution-count-badge" style="font-size: 13px; font-weight: 700; color: #475569; background: #f1f5f9; padding: 2px 10px; border-radius: 9999px;">已選 0/3 項</span>
+          </div>
+          <div id="precautions-checkbox-group" class="checkbox-grid">
+            <label class="checkbox-label"><input type="checkbox" value="小心跌倒" /><span>小心跌倒</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="翻身擺位" /><span>翻身擺位</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="拍背排痰" /><span>拍背排痰</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="蒸氣吸入" /><span>蒸氣吸入</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="血糖監測" /><span>血糖監測</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="拒藥傾向" /><span>拒藥傾向</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="藏藥行為" /><span>藏藥行為</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="安寧療護" /><span>安寧療護</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="嗆咳風險" /><span>嗆咳風險</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="左手禁治療" /><span>左手禁治療</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="右手禁治療" /><span>右手禁治療</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="壓傷高風險" /><span>壓傷高風險</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="防自拔管路" /><span>防自拔管路</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="補充水分" /><span>補充水分</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="限制水分" /><span>限制水分</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="傷口照護" /><span>傷口照護</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="情緒關懷" /><span>情緒關懷</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="約束安全" /><span>約束安全</span></label>
+          </div>
+          <div style="margin-top: 10px;">
+            <input type="text" id="input-precaution-other" class="form-input" placeholder="其他注意事項（例如：左腳禁扎針、假牙保管）" />
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. 飲食形態與進食協助 (獨立拆分) -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title">🥣 飲食照護</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="select-diet-texture"><span class="required-star">*</span> 1. 飲食形態</label>
+          <select id="select-diet-texture" class="form-select">
+            <option value="" selected disabled>-- 請選擇飲食形態 --</option>
+            <option value="正常餐">正常餐</option>
+            <option value="剪菜飯">剪菜飯</option>
+            <option value="攪菜粥">攪菜粥</option>
+            <option value="軟質飲食">軟質飲食</option>
+            <option value="碎食飲食">碎食飲食</option>
+            <option value="流質飲食">流質飲食</option>
+            <option value="低鹽飲食">低鹽飲食</option>
+            <option value="糖尿病低糖餐">糖尿病低糖餐</option>
+            <option value="限制水分">限制水分</option>
+            <option value="其他">其他 (自行輸入)</option>
+          </select>
+          <input type="text" id="input-diet-texture-other" class="form-input" placeholder="請輸入自訂飲食形態" style="display: none; margin-top: 6px;" />
+        </div>
+
+        <div class="form-group" style="margin-top: 12px;">
+          <label class="form-label" for="select-diet-assistance"><span class="required-star">*</span> 2. 進食協助方式</label>
+          <select id="select-diet-assistance" class="form-select">
+            <option value="" selected disabled>-- 請選擇進食協助方式 --</option>
+            <option value="可自行進食">可自行進食</option>
+            <option value="需部分協助進食">需部分協助進食</option>
+            <option value="需完全協助餵食">需完全協助餵食</option>
+            <option value="鼻胃管灌食">鼻胃管灌食</option>
+            <option value="胃造口灌食">胃造口灌食</option>
+            <option value="其他">其他 (自行輸入)</option>
+          </select>
+          <input type="text" id="input-diet-assistance-other" class="form-input" placeholder="請輸入自訂協助方式" style="display: none; margin-top: 6px;" />
+        </div>
+      </section>
+
+      <!-- 7. 排泄照護 (豐富預設項目 + 其他輸入框) -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title">🚽 排泄照護</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><span class="required-star">*</span> 排泄方式（可複選）</label>
+          <div id="elimination-checkbox-group" class="checkbox-grid">
+            <label class="checkbox-label"><input type="checkbox" value="自行如廁" /><span>自行如廁</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="尿布" /><span>尿布</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="尿褲" /><span>尿褲</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="留置導尿管" /><span>留置導尿管</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="便盆椅" /><span>便盆椅</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="尿壺" /><span>尿壺</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="腸造口照護" /><span>腸造口照護</span></label>
+          </div>
+          <div style="margin-top: 10px;">
+            <input type="text" id="input-elimination-other" class="form-input" placeholder="其他排泄照護說明" />
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. 輔具與移位 (豐富預設項目 + 其他輸入框) -->
+      <section class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-title">♿ 輔具與移位</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><span class="required-star">*</span> 使用輔具（可複選）</label>
+          <div id="aids-checkbox-group" class="checkbox-grid">
+            <label class="checkbox-label"><input type="checkbox" value="輪椅" /><span>輪椅</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="助行器" /><span>助行器</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="單拐" /><span>單拐</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="四腳拐" /><span>四腳拐</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="拐杖" /><span>拐杖</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="氣墊床" /><span>氣墊床</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="移位機" /><span>移位機</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="便盆椅" /><span>便盆椅</span></label>
+            <label class="checkbox-label"><input type="checkbox" value="無使用輔具" /><span>無輔具</span></label>
+          </div>
+          <div style="margin-top: 10px;">
+            <input type="text" id="input-aid-other" class="form-input" placeholder="其他輔具說明（如：移位滑板、伐步車）" />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 14px;">
+          <label class="form-label" for="select-transfer-ability"><span class="required-star">*</span> 移位能力 / 方式</label>
+          <select id="select-transfer-ability" class="form-select">
+            <option value="" selected disabled>-- 請選擇移位方式 --</option>
+            <option value="可自行走動">可自行走動</option>
+            <option value="需扶持">需扶持</option>
+            <option value="需協助上下床">需協助上下床</option>
+            <option value="需2人協助">需2人協助</option>
+            <option value="完全臥床">完全臥床</option>
+            <option value="絕對臥床">絕對臥床</option>
+            <option value="其他">其他 (自行輸入)</option>
+            <option value="待確認">待確認</option>
+          </select>
+          <input type="text" id="input-transfer-ability-other" class="form-input" placeholder="請輸入自訂移位方式說明" style="display: none; margin-top: 6px;" />
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- 右側 A4 即時預覽欄 (放大字級、舒適版型) -->
+    <section class="preview-column">
+      
+      <!-- 頂部預覽狀態列 (精巧包覆適合區塊範圍，縮小間距，視覺舒適) -->
+      <div class="preview-header-wrapper">
+        <div class="preview-header-bar">
+          <span class="preview-header-title">
+            <span>📄</span>
+            <span>住民資料卡預覽 (A4 橫式)</span>
+          </span>
+          <span id="fit-status-badge" class="fit-status normal">🟢 版面正常</span>
+        </div>
+      </div>
+
+      <!-- 內容過多警告橫幅 -->
+      <div id="fit-warning-banner" class="fit-warning-banner">
+        <span>⚠️ 文字超出 A4 單頁範圍，系統已自動為您微調字級</span>
+      </div>
+
+      <!-- A4 實體橫向紙張畫布 (1123px x 794px 與 PDF 輸出 100% 相同，等比例縮放適應螢幕) -->
+      <div class="card-preview-wrapper" id="card-preview-area">
+        <div class="card-a4-page" id="card-a4-page">
+          <div class="card-content" id="card-content">
+            <!-- 由 app.js 動態渲染 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部匯出操作工具列 (PDF 下載) -->
+      <div class="preview-actions-bar">
+        <button type="button" id="btn-download-pdf" class="btn btn-download-pdf">
+          📥 下載 PDF
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- 照片裁切互動視窗 (切住民照片) -->
+  <div id="photo-crop-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🖼 切住民照片</h3>
+      </div>
+      <div style="background-color: #f0fdf4; border-radius: 6px; padding: 10px 14px; font-size: 15px; color: #166534; line-height: 1.45; border-left: 4px solid #16a34a;">
+        💡 <b>大頭貼固定標準格式（已鎖定）：</b>拖曳<b>四個黑角手柄</b>即可等比例縮放裁切範圍（長寬固定格式適配卡片，絕不變形）；點擊<b>放大/縮小</b>或滾動滑鼠滾輪可自由縮放照片；按住<b>中央</b>可平移人臉。
+      </div>
+      <div class="crop-canvas-wrapper" style="padding: 8px; background-color: #0f172a; display: flex; justify-content: center; align-items: center; border-radius: 8px;">
+        <canvas id="crop-canvas" style="display: block; max-width: 100%;"></canvas>
+      </div>
+      <div class="crop-controls">
+        <div class="crop-btn-row" style="justify-content: center; gap: 8px; flex-wrap: wrap;">
+          <button type="button" id="btn-crop-zoom-in" class="btn btn-secondary btn-sm" title="放大照片 (+)">
+            🔍 放大 (+)
+          </button>
+          <button type="button" id="btn-crop-zoom-out" class="btn btn-secondary btn-sm" title="縮小照片 (-)">
+            🔍 縮小 (-)
+          </button>
+          <button type="button" id="btn-crop-select-all" class="btn btn-secondary btn-sm" title="還原至固定標準比例最大範圍">
+            🔲 重設最大範圍
+          </button>
+          <button type="button" id="btn-crop-rotate" class="btn btn-secondary btn-sm" title="順時針旋轉照片 90°">
+            ↻ 旋轉 90°
+          </button>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+        <button type="button" id="btn-crop-cancel" class="btn btn-secondary">取消</button>
+        <button type="button" id="btn-crop-confirm" class="btn btn-primary">確認使用此照片 (刪除邊緣)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 詞庫管理 Modal (增加 / 編輯 / 刪除 / 匯出備份 / 匯入) -->
+  <div id="quote-manager-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 640px; max-height: 88vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid #ead9c3;">
+        <h3 class="modal-title" style="margin: 0; color: var(--forest-2); font-size: 21px; font-weight: 800;">📖 詞庫管理</h3>
+        <button type="button" id="btn-close-quote-modal-x" class="guide-close-btn" style="border: 1px solid #d9b991; background: #fff8ef; border-radius: 50%; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; color: #783313; line-height: 1; transition: 0.18s;" title="關閉">✕</button>
+      </div>
+      <div style="padding: 10px 14px; background-color: #f0fdf4; border-left: 4px solid #16a34a; font-size: 14px; color: #166534; line-height: 1.45; border-radius: 4px;">
+        💡 <b>功能說明：</b>您可自由新增、修改或刪除卡片名言。所有詞庫皆自動保存於瀏覽器本機，亦可透過「匯出詞庫」備份或「匯入詞庫」在其他設備或佈署網站使用。
+      </div>
+
+      <!-- 新增名言輸入區 -->
+      <div style="display: flex; gap: 8px; align-items: center; background-color: #f8fafc; padding: 12px; border-radius: 8px; border: 1.5px solid #e2e8f0; margin-top: 10px;">
+        <select id="input-new-quote-icon" class="form-select" style="width: 72px; font-size: 20px; padding: 6px 8px; text-align: center; flex-shrink: 0;">
+          <option value="🌸" selected>🌸</option>
+          <option value="💖">💖</option>
+          <option value="☘">☘</option>
+          <option value="☀️">☀️</option>
+          <option value="🤲">🤲</option>
+          <option value="🌿">🌿</option>
+          <option value="🍵">🍵</option>
+          <option value="🌻">🌻</option>
+          <option value="🍀">🍀</option>
+          <option value="🕊">🕊</option>
+        </select>
+        <input type="text" id="input-new-quote-text" class="form-input" maxlength="15" placeholder="請輸入一句名言或祝福（最多 15 字以內）..." style="flex: 1;" />
+        <button type="button" id="btn-add-quote" class="btn btn-primary btn-sm" style="white-space: nowrap; padding: 8px 16px; font-weight: 800;">
+          ➕ 新增
+        </button>
+      </div>
+
+      <!-- 詞庫清單 (可滾動) -->
+      <div id="quote-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; max-height: 360px; padding-right: 4px; min-height: 180px; margin-top: 10px;">
+        <!-- 由 JS 動態生成 -->
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 12px; border-top: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" id="btn-export-quotes" class="btn btn-secondary btn-sm" title="下載詞庫備份檔 (JSON)">
+            💾 匯出詞庫
+          </button>
+          <button type="button" id="btn-import-quotes" class="btn btn-secondary btn-sm" title="匯入已備份的詞庫檔 (JSON)">
+            📥 匯入詞庫
+          </button>
+          <input type="file" id="quote-import-file" accept=".json" style="display: none;" />
+          <button type="button" id="btn-reset-default-quotes" class="btn btn-secondary btn-sm" style="color: #dc2626; border-color: #fca5a5;" title="將名言庫重置為系統原廠 15 則經典名言">
+            🔄 恢復預設
+          </button>
+        </div>
+        <button type="button" id="btn-close-quote-modal" class="btn btn-primary">
+          完成關閉
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 匯出中 Spinner 提示 -->
+  <div id="export-loading-indicator">
+    <div class="spinner"></div>
+    <span>正在為您生成高畫質檔案，請稍候...</span>
+  </div>
+
+  <!-- AI 智慧輔助互動視窗 (出院病摘／相關資料自動辨識與填表) -->
+  <dialog class="global-ai-modal" id="ai-assistant-modal" aria-labelledby="globalAiModalTitle">
+    <div class="global-ai-modal-inner">
+      <div class="global-ai-modal-head">
+        <div class="global-ai-modal-title-group">
+          <span class="ai-badge">✨ 全域 AI 智慧辨識</span>
+          <h3 id="globalAiModalTitle">出院病摘／相關資料自動辨識與填表</h3>
+        </div>
+        <div class="global-ai-modal-actions">
+          <button type="button" class="ai-key-btn" id="btn-open-ai-api-key" title="點擊設定 Google Gemini 免費 API Key">
+            ⚙️ <span id="aiKeyStatusTextModal">設定 API Key</span>
+          </button>
+          <button type="button" class="guide-close-btn" id="btn-close-ai-modal" aria-label="關閉" title="關閉">×</button>
+        </div>
+      </div>
+
+      <!-- 顯眼標示之小叮嚀 -->
+      <div class="ai-notice-banner" role="alert" aria-label="隱私保護與核對叮嚀">
+        <span class="ai-notice-icon">🛡️</span>
+        <div class="ai-notice-body">
+          <span class="ai-notice-badge">臨床提醒</span>拍照時建議可<span class="ai-notice-hl">遮蔽身分證字號與姓名保護個資</span>。辨識結果僅供整理參考，護理人員仍須依原始文件、機構 SOP 與實際評估逐項核對後再使用。
+        </div>
+      </div>
+
+      <!-- 簡單提醒：可同時上傳檔案+文字描述一起產出內容 -->
+      <div class="ai-combo-tip" role="note">
+        <span style="font-size: 16px; line-height: 1;">💡</span>
+        <div><strong>多元輸入提醒：</strong>可同時<strong>「上傳檔案」＋「文字描述」</strong>一起產出內容！亦可單獨傳檔或單獨貼文字，AI 將自動綜合印證分析。</div>
+      </div>
+
+      <!-- 獨立大頭貼上傳區 (可選，避免病歷文件被誤當大頭照) -->
+      <div class="ai-headshot-box" id="ai-headshot-zone" style="margin-bottom: 12px; padding: 12px 16px; background: #fffaf5; border: 1.5px dashed #e17c38; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-sizing: border-box;">
+        <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+          <div id="ai-headshot-preview-slot" style="width: 52px; height: 52px; border-radius: 9px; border: 1.5px solid #d56f22; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 26px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.06);">
+            👤
+          </div>
+          <div style="min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <strong style="font-size: 16.5px; color: var(--forest-2);">住民個人大頭貼</strong>
+            </div>
+            <span id="ai-headshot-status-txt" style="display: block; font-size: 14.5px; color: #783313; margin-top: 3px; word-break: break-all;">
+              若有住民生活照或證件照可在此選取；自動置中裁切並保留完整原圖以供微調。
+            </span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+          <input type="file" id="ai-headshot-file-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display: none;" />
+          <button type="button" class="btn btn-secondary" id="btn-ai-select-headshot" style="font-size: 15px; padding: 7px 14px; font-weight: 700; white-space: nowrap;">
+            📷 選擇大頭貼
+          </button>
+          <button type="button" class="btn btn-secondary" id="btn-ai-clear-headshot" style="display: none; font-size: 15px; padding: 7px 12px; color: #dc2626; font-weight: 700;" title="清除此大頭貼">
+            ✕ 清除
+          </button>
+        </div>
+      </div>
+
+      <!-- 上傳拖曳區 -->
+      <div class="ai-dropzone" id="ai-dropzone" role="button" tabindex="0" aria-label="點擊或拖曳上傳病歷與相關資料檔案">
+        <input type="file" id="ai-file-input" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.txt,.csv,.doc,.docx,.ppt,.pptx,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple style="display: none;" />
+        <div class="ai-dropzone-content" style="display: flex; align-items: center; justify-content: center; gap: 12px; text-align: left;">
+          <div class="ai-dropzone-icon" style="font-size: 28px;">📂</div>
+          <div class="ai-dropzone-text">
+            <strong style="display: block; font-size: 16.5px; margin-bottom: 3px; color: var(--forest-2);">點擊選擇檔案／拍照，或將病歷與相關資料拖曳至此</strong>
+            <span style="font-size: 14px; color: #64748b; line-height: 1.45;">支援 Word (.docx/.doc)、PPT (.pptx/.ppt)、Excel (.xlsx/.xls)、PDF (上限 12MB)、圖片 (JPG/PNG/WebP)、TXT/CSV；可多選，亦可「上傳檔案＋文字描述」一起送出</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 已選取檔案清單與大頭照預覽 -->
+      <div id="ai-files-preview-list" style="display: none; margin-top: 14px; gap: 12px; flex-wrap: wrap;">
+        <!-- 動態渲染選中的檔案與圖片縮圖 -->
+      </div>
+
+      <!-- 文字輸入區 (選填，可與檔案同時分析) -->
+      <div class="field-ai-text-wrap" style="margin-top: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px;">
+          <label for="ai-text-input" style="font-size: 15.5px; font-weight: 750; color: #4c584e; margin-bottom: 0;">
+            📝 手動文字補充（選填，若已上傳檔案可直接點開始辨識）：
+          </label>
+          <button type="button" id="btn-clear-ai-text" class="btn btn-outline ai-clear-files-btn" title="清空文字輸入框內容">
+            清空文字內容
+          </button>
+        </div>
+        <textarea id="ai-text-input" rows="5" class="form-input" style="width: 100%; font-size: 16px; line-height: 1.55; resize: vertical; padding: 10px 12px; min-height: 90px; border-radius: 9px; box-sizing: border-box;" placeholder="💡 選填：若已有上傳檔案，此處可留空；亦可在此輸入交班重點、手動備註或補充說明，AI 將在背景結合檔案綜合分析..."></textarea>
+      </div>
+
+      <!-- 開始分析操作列 (包含開新個案與開始分析按鈕) -->
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+        <button type="button" id="btn-ai-new-case" class="btn btn-secondary ai-new-case-btn" style="font-size: 17px; padding: 11px 22px; font-weight: 800; color: #991b1b; background: linear-gradient(135deg, #fff1f2 0%, #fee2e2 100%); border: 2px solid #f87171; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15); cursor: pointer;" title="清空前次個案表單與暫存，重新輸入新個案">
+          <span style="font-size: 20px;">🧹</span>
+          <span>開新個案（清空前次資料）</span>
+        </button>
+        <button type="button" id="btn-run-ai-analysis" class="btn btn-primary ai-analyze-btn" style="font-size: 17px; padding: 11px 24px; font-weight: 800;">
+          <span class="btn-icon" style="font-size: 19px;">🚀</span> 開始 AI 智慧辨識與填表
+        </button>
+      </div>
+
+      <!-- 分析中狀態條與進度（按按鈕時才顯示） -->
+      <div class="ai-status-box" id="aiStatusBox" role="status" aria-live="polite" style="display: none;">
+        <div class="ai-spinner" id="aiSpinner"></div>
+        <div class="ai-status-content" style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <strong id="aiStatusTitle" style="font-size: 16px;">AI 正在深度分析病歷影像中...</strong>
+            <span class="ai-progress-percent" id="ai-progress-percent" style="font-weight: 800; color: #d56f22; font-size: 16px;">0%</span>
+          </div>
+          <p id="ai-status-message" style="margin: 4px 0 6px 0; font-size: 14.5px; color: #783313;">正在以最新極速模型深度覆核與填表...</p>
+          <div class="ai-progress-container" id="aiProgressContainer">
+            <div class="ai-progress-track" id="ai-progress-track" style="display: block;">
+              <div class="ai-progress-fill" id="ai-progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section id="ai-review-result" class="ai-review-result" hidden aria-live="polite"></section>
+
+      <!-- 彈窗底部操作列 -->
+      <div class="global-ai-modal-footer">
+        <button type="button" id="btn-cancel-ai-modal" class="btn btn-outline" style="font-size: 16px; padding: 8px 18px;">關閉視窗</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 金鑰管理密碼驗證彈窗（防暴力破解保護） -->
+  <dialog class="ai-key-dialog" id="apiKeyAuthDialog" aria-labelledby="apiKeyAuthTitle">
+    <div class="ai-key-dialog-inner" style="max-width: 440px;">
+      <div class="ai-key-dialog-head">
+        <h3 id="apiKeyAuthTitle">🔒 金鑰設定身分驗證</h3>
+        <button type="button" class="guide-close-btn" id="apiKeyAuthCloseBtn" aria-label="關閉" title="關閉">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="ai-key-dialog-body">
+        <p style="margin: 0 0 12px; font-size: 14px; color: var(--forest-2); line-height: 1.5;">
+          「設定 API Key」涉及使用者核心金鑰與存取權限，請輸入管理密碼解鎖：
+        </p>
+        <div class="field" style="margin-bottom: 12px;">
+          <label for="apiKeyAuthInput" style="font-weight: 700; display: block; margin-bottom: 6px;">管理密碼：</label>
+          <input type="password" id="apiKeyAuthInput" class="form-input" placeholder="請輸入 4 位數管理密碼" autocomplete="off" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" style="letter-spacing: 0.25em; font-size: 18px; text-align: center; padding: 10px; width: 100%;">
+        </div>
+        <div id="apiKeyAuthStatus" style="font-size: 13.5px; min-height: 22px; margin-bottom: 12px; font-weight: 700; transition: all .2s ease;"></div>
+        <div class="field-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" id="apiKeyAuthCancelBtn">取消</button>
+          <button type="button" class="btn btn-primary" id="apiKeyAuthSubmitBtn">確認解鎖</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- API Key 設定彈窗 (Dialog) -->
+  <dialog class="ai-key-dialog" id="aiKeyDialog" aria-labelledby="aiKeyDialogTitle">
+    <div class="ai-key-dialog-inner">
+      <div class="ai-key-dialog-head">
+        <h3 id="aiKeyDialogTitle">🔑 設定 Google Gemini API Key</h3>
+        <button type="button" class="guide-close-btn" id="aiKeyCloseBtn" aria-label="關閉" title="關閉">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="ai-key-dialog-body">
+        <p style="margin: 0 0 10px; font-size: 15px; color: var(--forest-2); font-weight: 700;">請輸入您的 Google Gemini API Key（免費版即可）：</p>
+        <div class="field">
+          <input type="password" id="geminiApiKeyInput" class="form-input" placeholder="請貼上您的 Google Gemini API Key（如 AIzaSy 或 AQ 開頭...）" autocomplete="off" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px;">
+        </div>
+        <div id="ai-password-setup-fields" style="margin-top: 12px;">
+          <label for="aiSettingsPassword" style="font-weight: 700; display: block; margin-bottom: 6px;">管理密碼（首次設定必填，4 位數）</label>
+          <input type="password" id="aiSettingsPassword" class="form-input" placeholder="設定 4 位數管理密碼" autocomplete="new-password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" style="width: 100%; letter-spacing: 0.25em; font-size: 17px; text-align: center; padding: 10px;">
+          <label for="aiSettingsPasswordConfirm" style="font-weight: 700; display: block; margin: 10px 0 6px;">確認管理密碼</label>
+          <input type="password" id="aiSettingsPasswordConfirm" class="form-input" placeholder="再次輸入相同 4 位數密碼" autocomplete="new-password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" style="width: 100%; letter-spacing: 0.25em; font-size: 17px; text-align: center; padding: 10px;">
+          <p id="ai-password-setup-hint" style="margin: 8px 0 0; font-size: 13px; color: #64748b; line-height: 1.45;">此密碼用來保護變更或清除 AI 金鑰；僅保存不可逆雜湊，不保存明碼。</p>
+        </div>
+        <div id="aiKeyStatusMsg" style="margin: 10px 0 0; font-size: 13.5px; line-height: 1.5; display: none; padding: 8px 12px; border-radius: 8px; font-weight: 700;"></div>
+        <div class="ai-key-guide">
+          <strong>💡 如何免費取得與設定 API Key？（只需 30 秒，完全免費、不需綁信用卡）</strong>
+          <ol>
+            <li>前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio 官網 (點此開新分頁)</a>。</li>
+            <li>以任意 Google 帳號登入後，點擊藍色 <strong>「Create API key」</strong> 按鈕。</li>
+            <li>複製產生的金鑰代碼（常見如 <code>AIzaSy</code>、<code>AQ</code> 等開頭格式），貼在上方輸入框中。</li>
+            <li>可先點擊 <strong>「測試連線」</strong> 驗收 Google 官方連線通暢，再點擊 <strong>「儲存金鑰」</strong>。Key 儲存於本機瀏覽器，提供手動清除與密碼鎖定功能，換班開啟免重複輸入。</li>
+          </ol>
+        </div>
+        <div style="margin: 12px 0 0; padding: 8px 12px; background: #fff8e6; border: 1px solid #f2c779; border-radius: 6px; font-size: 13px; color: #7a4b04; line-height: 1.5;">
+          ⚠️ <strong>隱私提醒</strong>：設定並使用 AI 金鑰後，按「開始自動辨識」會將選取文字／檔案傳送至 Google Gemini 處理；請只提供必要資料，並依機構規範先遮蔽不必要個資。使用完畢可於下方點擊「登出 / 清除已存金鑰」。
+        </div>
+        <div class="ai-key-dialog-footer">
+          <button type="button" class="btn btn-secondary" id="aiKeyClearBtn" style="color: #dc2626; border-color: #fca5a5;">登出 / 清除已存金鑰</button>
+          <button type="button" class="btn btn-secondary" id="aiKeyTestBtn" style="font-weight: 700;">測試連線</button>
+          <button type="button" class="btn btn-primary" id="aiKeySaveBtn" style="font-weight: 800;">儲存金鑰</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- AI 辨識待確認項目提醒彈窗 (Uncertainty Dialog) -->
+  <dialog class="ai-uncertainty-dialog" id="aiVerificationDialog" aria-labelledby="aiVerificationTitle">
+    <div class="ai-uncertainty-inner">
+      <div class="ai-uncertainty-head">
+        <div>
+          <div class="ai-uncertainty-badge">⚠️ 臨床安全雙核對防呆</div>
+          <h3 id="aiVerificationTitle">AI 辨識待確認項目提醒</h3>
+        </div>
+        <button type="button" class="guide-close-btn" id="aiVerificationCloseX" aria-label="關閉" title="關閉">×</button>
+      </div>
+      <div class="ai-uncertainty-body">
+        <div class="ai-uncertainty-alert-box">
+          <p class="ai-uncertainty-desc" id="aiUncertaintyDesc">AI 在分析病歷與評估資料時，發現以下項目存在<strong>字跡模糊、資訊缺漏、數值疑似或多重判讀可能</strong>。為確保住民照護安全，請護理人員親自進行雙重核對：</p>
+        </div>
+        <div id="aiVerificationContent" style="overflow-y: auto; max-height: 50vh; padding: 2px;">
+          <!-- 動態渲染需核對事項與完整填寫清單 -->
+        </div>
+        <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #ead9c3; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-primary" id="aiVerificationConfirmBtn" style="font-weight: 800; padding: 11px 26px; font-size: 17px;">
+            ✓ 我已知悉並前往確認資料
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- PDF 下載前欄位完整性檢查彈窗 (PDF Export Check Dialog) -->
+  <dialog class="ai-key-dialog" id="unfilledExportDialog" aria-labelledby="unfilledExportTitle" style="max-width: 580px;">
+    <div class="ai-key-dialog-inner" style="max-width: 580px;">
+      <div class="ai-key-dialog-head">
+        <h3 id="unfilledExportTitle" style="display: flex; align-items: center; gap: 8px;">
+          <span>📋</span> 下載前欄位填寫檢查
+        </h3>
+        <button type="button" class="guide-close-btn" id="unfilledExportCloseX" aria-label="關閉" title="關閉">×</button>
+      </div>
+      <div class="ai-key-dialog-body" style="padding-top: 10px;">
+        <p style="margin: 0 0 12px; font-size: 15px; color: #334155; line-height: 1.6;">
+          系統在產生 PDF 前為您完成檢查，發現以下項目尚未完整填寫。建議補齊後再輸出，以確保臨床照護資料完整；您亦可確認後直接匯出：
+        </p>
+
+        <!-- 必填核心未填項目清單 -->
+        <div id="unfilledRequiredSection" style="margin-bottom: 12px; background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 8px; padding: 10px 14px;">
+          <strong style="color: #991b1b; font-size: 15px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <span>🔴</span> 必填核心未填項目 (<span id="unfilledRequiredCount">0</span>)
+          </strong>
+          <ul id="unfilledRequiredList" style="margin: 0; padding-left: 20px; color: #b91c1c; font-size: 14.5px; line-height: 1.6; font-weight: 700;"></ul>
+        </div>
+
+        <!-- 選填 / 大頭照未填項目清單 -->
+        <div id="unfilledOptionalSection" style="margin-bottom: 14px; background: #fffdf5; border: 1.5px solid #fde047; border-radius: 8px; padding: 10px 14px;">
+          <strong style="color: #854d0e; font-size: 15px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <span>🟡</span> 選填／大頭照待確認項目 (<span id="unfilledOptionalCount">0</span>)
+          </strong>
+          <ul id="unfilledOptionalList" style="margin: 0; padding-left: 20px; color: #a16207; font-size: 14.5px; line-height: 1.6;"></ul>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #e2e8f0; flex-wrap: wrap;">
+          <button type="button" class="btn btn-secondary" id="btnUnfilledGoFix" style="font-weight: 700; padding: 9px 18px;">
+            ✏️ 前往補齊資料
+          </button>
+          <button type="button" class="btn btn-primary" id="btnUnfilledProceedDownload" style="font-weight: 800; padding: 9px 20px;">
+            📥 確認資料，直接下載 PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 使用說明 Dialog (完全依照個案資料卡真實操作進行說明內容) -->
+  <dialog class="guide-dialog" id="guideDialog" aria-labelledby="guideTitle">
+    <div class="guide-dialog-inner">
+      <div class="guide-dialog-head">
+        <div>
+          <h2 id="guideTitle">使用說明</h2>
+          <p>依序填寫、即時預覽、支援 AI 智慧辨識與多語言切換，完成後一鍵產出 A4 單頁資料卡。</p>
+        </div>
+        <button type="button" class="guide-close-btn" id="guideCloseBtn" aria-label="關閉使用說明" title="關閉">×</button>
+      </div>
+      <section class="guide-quick-start" aria-label="快速開始">
+        <strong>快速開始（4 步驟輕鬆產出）</strong>
+        <ol>
+          <li><strong>選擇照護第二語言</strong>：預設為越南語，可依外籍照服同仁母語切換英語、印尼語、菲律賓語、泰語，或切換為純中文模式；各欄位均支援自動聯網精準翻譯。</li>
+          <li><strong>建立新個案或 AI 智慧辨識（選用）</strong>：
+            <ul>
+              <li><strong>開新個案</strong>：點擊左側最頂端獨立醒目的紅色「🧹 一鍵開新個案（清空表單）」按鈕，徹底清空表單、大頭照與上傳暫存，確保建立全新個案不遺留舊資料。</li>
+              <li><strong>AI 輔助辨識</strong>：點擊「✨ AI 智慧輔助（出院病摘／相關資料自動辨識）」，支援上傳出院病摘、長照定期評估表、交班資料之<strong>Word (.docx/.doc)、PowerPoint (.pptx/.ppt)、Excel (.xlsx/.xls)、PDF (上限 12MB)、圖片 (JPG/PNG/WebP) 或純文字/CSV</strong>。系統以雙引擎精準提取欄位，AI 分析完成後<strong>中文姓名與外語姓名音譯確實自動帶入</strong>；請護理人員落實雙重核對。</li>
+            </ul>
+          </li>
+          <li><strong>檢視或手動調整左側欄位</strong>：
+            <ul>
+              <li>標記紅色 <span class="required">*</span> 為必填欄位；六大照護區塊旗下內容與複選項目已<strong>全面統一固定字級（中文 28px、外語 21px）</strong>，排版清晰不忽大忽小；聽力與視力字體鎖定相同大字級。</li>
+              <li><strong>聽力與視力無法判斷時</strong>：若長者因木僵、中風失語、認知退化無法評估，可選擇「其他 (自行輸入)」並填寫簡要描述（如「不知道」、「無法判斷」）。</li>
+              <li><strong>移位能力新增「絕對臥床」</strong>：除可自行走動、需扶持、需協助上下床、需2人協助、完全臥床外，新增<strong>「絕對臥床」</strong>選項（代表嚴格醫療限制禁止下床），具備專業 5 國語言對照。</li>
+            </ul>
+          </li>
+          <li><strong>大頭貼確認與一鍵下載 PDF</strong>：可於專屬照片區上傳住民照片並進行 334:254 比例裁切（尺寸絕對鎖定）。點擊「📥 下載 PDF」時，系統會自動檢核未完成欄位並以紅色標記提醒，確認後即可產出 A4 橫式單頁資料卡。</li>
+        </ol>
+      </section>
+      <div class="guide-list">
+        <details open>
+          <summary class="guide-toggle">📖 個案資料卡最新版面配置與字級規範</summary>
+          <div class="guide-content">
+            <p>本產生器專為台灣長照機構（護理之家、安養護機構、日照中心）住民床頭卡、照護卡、交班速讀卡設計：</p>
+            <ul>
+              <li><strong>頂部狀態列精巧舒適化</strong>：將「📄 住民資料卡預覽 (A4 橫式)」與「🟢 版面正常（標準最佳閱讀字級）」縮小包覆於精緻膠囊區塊內，視覺舒適不突兀。</li>
+              <li><strong>六大照護區塊最新版面配置</strong>：
+                <ul>
+                  <li><strong>左側欄</strong>：👁 外表意識 ➔ 👂 聽力與視力 ➔ ⚠ 注意事項（置於左下焦點區）。</li>
+                  <li><strong>右側欄</strong>：🥣 飲食 ➔ 🚽 排泄 ➔ ♿ 輔具與移位（置於右下）。</li>
+                </ul>
+              </li>
+              <li><strong>旗下內容與複選項目字級全面統一固定</strong>：
+                <ul>
+                  <li>各照護欄位旗下內容（無論 1 項、2 項或 3 項）<strong>中文一律固定為 28px、外語一律固定為 21px</strong>，徹底消除因字數不同導致同區塊內「字體忽大忽小」的視覺落差。</li>
+                  <li><strong>聽力與視力字體鎖定一致</strong>：聽力項目（如「需大聲說話」）固定與視力相同為 28px，不再隨字數縮小。</li>
+                  <li><strong>右上角當前名言放大與自訂詞庫</strong>：名言字級放大為 26px，呈現溫馨大器的視覺效果；點擊左側「⚙️ 詞庫管理」可自由新增、編輯名言或匯出/匯入詞庫備份檔，亦可直接點擊資料卡右上角標籤即時切換。</li>
+                </ul>
+              </li>
+              <li><strong>未填寫欄位紅框醒目標記</strong>：中文姓名未填寫時以醒目紅色框線標記；下載 PDF 前若有任何未填項目，檢核彈窗皆會以高對比紅框醒目提醒。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary class="guide-toggle">🌐 照護第二語言、外語姓名帶入與自動聯網翻譯</summary>
+          <div class="guide-content">
+            <p>促進本籍護理同仁與外籍照服夥伴無縫溝通之多語對齊機制：</p>
+            <ul>
+              <li><strong>支援 5 大外籍照護語言</strong>：越南語 (Tiếng Việt)、英語 (English)、印尼語 (Bahasa Indonesia)、菲律賓語 (Tagalog)、泰語 (ภาษาไทย)，亦可隨時切換為純中文 (zh-only) 模式。</li>
+              <li><strong>外語姓名翻譯確實由 AI 分析後自動帶入</strong>：AI 完成出院病摘或文字辨識後，會依照當前選擇之照護第二語言進行標準音譯（如越南語標準漢越音、英語護照羅馬拼音），並確實自動帶入表單與資料卡，絕不留白。</li>
+              <li><strong>全欄位支援自動聯網翻譯</strong>：預設開啟「允許自動聯網翻譯」，除了主要疾病外，亦支援各欄位自訂輸入內容的自動外語精準翻譯。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary class="guide-toggle">📋 照護重點 18 項常用清單與客觀分析原則</summary>
+          <div class="guide-content">
+            <p>重要注意事項完整涵蓋臨床最常見之 18 大照護項目，每項皆具備 5 國語言專業對照：</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; margin: 8px 0; font-size: 14.5px;">
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">1. 小心跌倒</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">2. 翻身擺位</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">3. 拍背排痰</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">4. 蒸氣吸入</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">5. 血糖監測</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">6. 拒藥傾向</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">7. 藏藥行為</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">8. 安寧療護</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">9. 嗆咳風險</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">10. 左手禁治療</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">11. 右手禁治療</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">12. 壓傷高風險</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">13. 防自拔管路</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">14. 補充水分</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">15. 限制水分</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">16. 傷口照護</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">17. 情緒關懷</span>
+              <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">18. 約束安全</span>
+            </div>
+            <ul>
+              <li><strong>真實客觀選取原則</strong>：通盤分析整份病歷與評估資料，務必依照上傳檔案資料分析才有的真實性選出最多 3 項；若資料不足以佐證則呈現實際符合的項目（可少於 3 個），絕不憑空捏造或以常規填滿。</li>
+              <li><strong>防自拔管路不再固定佔據首位</strong>：唯有同時存在管路留置且合併意識混亂、譫妄、躁動或失智拔管風險時才會優先考慮，符合臨床實際。</li>
+              <li><strong>左手禁治療 / 右手禁治療規範</strong>：因應動靜脈造廔（洗腎通路）、患側偏癱、嚴重水腫或淋巴廓清，精準提示「禁治療」安全防護。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary class="guide-toggle">🚀 雙引擎 AI 智慧輔助與嚴格臨床防臆測機制</summary>
+          <div class="guide-content">
+            <p>點擊頂端「✨ AI 智慧輔助（出院病摘／相關資料自動辨識）」啟動全方位深度解析：</p>
+            <ul>
+              <li><strong>介面按鈕與核對面板優化</strong>：
+                <ul>
+                  <li><strong>「🧹 一鍵開新個案（清空表單）」按鈕</strong>：獨立設置於左側操作欄最頂部，放大字級與按鈕尺寸，獨立醒目，一鍵徹底清除前次個案的表單內容、大頭照與上傳暫存。</li>
+                  <li><strong>持續金色發光按鈕「⚡ 一鍵全部切換為 AI 建議值」</strong>：分析完成後，若表單原有手填內容，核對視窗右上角會顯示<strong>持續金色溫暖發光（琥珀金漸層底色＋舒緩雙層金光呼吸＋微光流動）</strong>的切換按鈕，視覺顯眼舒緩不刺眼，方便護理同仁第一時間點擊將保留項全部切換為 AI 建議值。</li>
+                  <li><strong>臨床核對警示與分析補充（集中單一表框＋智慧去重）</strong>：核對彈窗將「⚠️ 需特別核對事項 / 系統警示」與「💡 分析補充與說明」<strong>集中整合於同一個白底金黃邊框面板</strong>（白底、金黃邊框與深黃褐文字），並內建<strong>主題智慧去重機制</strong>（自動消除大頭照、視聽、疾病或管路重複條目），資訊一目了然不繁雜；關閉彈窗後亦可隨時透過左側常駐橫幅點開複查。</li>
+                  <li><strong>🔴 未能判讀／留白待確認欄位（主動提供主要原因分析）</strong>：針對 AI 未能自資料中提取而留白的欄位，系統不僅列出待確認項目，更會<strong>針對本次具體留白欄位（如大頭照無肖像、輔具未註記生活輔具名稱、飲食未載明質地等）提供專屬診斷說明</strong>，並附可點擊展開之「系統核心臨床防護機制（跨個案隔離防護、前後記載矛盾、生理受限、印刷題零臆測）」，幫助護理同仁一眼看懂留白背景並進行人工補正。</li>
+                  <li><strong>「清空已選檔案」與「清空已選內容」按鈕</strong>：檔案列表與文字補充區皆設有專屬一鍵清空按鈕，方便迅速重置上傳項目。</li>
+                </ul>
+              </li>
+              <li><strong>長照通用表單與醫療病摘深度相容</strong>：
+                <ul>
+                  <li><strong>跨格式支援長照表單與交班文件</strong>：全面支援各大長照機構與醫院之<strong>Word (.docx/.doc)、PowerPoint (.pptx/.ppt)、Excel (.xlsx/.xls)、PDF (上限 12MB)、病歷翻拍照 (JPG/PNG/WebP) 及純文字/CSV</strong>，系統自動提取文字與表格進行雙引擎穿透解析。</li>
+                  <li><strong>多疾病智慧分級與主要疾病優先套用</strong>：若原始資料、病摘或評估表中列出眾多慢性病史（如 5~10 項以上包含高血脂、痛風、退化性關節炎、骨質疏鬆、失眠、便秘等），系統自動依<strong>「臨床嚴重度與日常照護相關性」智慧分級</strong>（腦中風/重症/心衰竭/洗腎/失智/癌症 ＞ 糖尿病/高血壓/COPD/癲癇 ＞ 次要慢性病），並以明確標註之<strong>主診斷、出院主診斷為最高權重</strong>，優先自動套用最核心之 3 大主要疾病，嚴防次要病史排擠關鍵照護診斷，並於核對視窗詳列篩選與省略明細供護理人員確認。</li>
+                  <li><strong>視力聽力「不知道 / 無法判斷」智慧對應</strong>：當個案因意識障礙、中風等因素無法評估時，AI 自動歸類為「其他」並帶入原文描述（如「不知道」、「無法判斷」），雙語卡片自適應輸出，解決非標準選項填寫困境。</li>
+                  <li><strong>移位能力「絕對臥床」自動判讀</strong>：當病摘或評估表提及「絕對臥床」或「Strict Bed Rest」，AI 自動選取「絕對臥床」，並連動提高「翻身擺位」與「壓傷高風險」之照護優先級，輔具嚴格排除「無使用輔具」。</li>
+                  <li><strong>嚴防未打勾方框臆測（如白內障、青光眼、便盆椅）</strong>：評估表中印有印刷題目方框但未打勾者，AI 嚴格排除；明確記載視力正常或無障礙時，絕不誤判為白內障。</li>
+                  <li><strong>排泄造口 vs 胃造口（PEG）分流</strong>：胃造口（PEG）屬於飲食形態「胃造口灌食」，絕不誤判為排泄方式的「腸造口照護」；「腸造口照護」嚴格限定於真正具備人工肛門或腸造口之個案。</li>
+                </ul>
+              </li>
+              <li><strong>雙引擎架構與最新 AI 模型分析機制</strong>：
+                <ul>
+                  <li><strong>最新雲端大模型深度推理（建議啟用）</strong>：設定免費 API Key 後，模型具備<strong>動態視覺注意力</strong>（精準區分手寫勾選 ☑ 與空白印刷題 □，抗手機翻拍傾斜與低對比）、<strong>跨頁時間軸時序推理</strong>（以出院當下最新管路與活動狀態為準，不混淆過去病史）、<strong>否定句與臨床互斥解析</strong>（如「無壓瘡」、「絕對臥床不可無輔具」），並嚴格落實「零臆測事實歸因」，無白紙黑字證據絕不盲目填滿。</li>
+                  <li><strong>本機極速離線規則引擎</strong>：未設定 API Key 或無網路時，本機離線規則 0.05 秒瞬時帶入，適合標準文字快速結構化。</li>
+                  <li><strong>臨床安全鐵三角防護</strong>：AI 智慧穿透整理 ＋ 前端代碼硬性防呆（造口分流、輔具排除、尺寸保護、必填紅框） ＋ 護理專業雙重核對，兼顧工作效率與照護安全。</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary class="guide-toggle">📷 住民大頭照專屬槽、鎖定比例 (334:254) 與尺寸絕對保護</summary>
+          <div class="guide-content">
+            <p>住民照片上傳與版面比例標準化規範：</p>
+            <ul>
+              <li><strong>大頭照區塊尺寸鎖定嚴禁異動</strong>：大頭照版面位置與外框大小受系統最高層級保護，任何字級微調或適版降級均絕不壓縮或異動照片尺寸。</li>
+              <li><strong>標準比例嚴格鎖定 (334 : 254)</strong>：大頭照裁切框鎖定為長寬比 334:254（高清輸出 668×508），完美對齊資料卡人像框，上傳任何尺寸照片絕不變形失真。</li>
+              <li><strong>互動裁切功能</strong>：支援拖曳四角手柄等比例縮放裁切範圍、滑鼠滾輪縮放照片、按住中央自由平移人臉，並提供順時針旋轉 90° 修正橫向照片。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary class="guide-toggle">📄 A4 橫式單頁列印、精簡預警與排泄彈性排版</summary>
+          <div class="guide-content">
+            <p>保證資料卡永遠維持 A4 橫向單頁（297mm × 210mm）最佳輸出品質：</p>
+            <ul>
+              <li><strong>排泄欄位內容不限行數</strong>：排泄欄位中文內容解除兩行限制，完整呈現各項排泄評估文字，絕不暴力刪字，同時透過智慧排版維持單頁完整呈現。</li>
+              <li><strong>疾病史雙行自適應</strong>：主要疾病最多 3 項；中文與第二語言內容合計以兩行為目標，超出時自動微調字級，優先微調外語以保證中文最佳可讀性。</li>
+              <li><strong>單頁微調精簡提示</strong>：文字超出單頁範圍時，頂部以簡潔單行「⚠️ 文字超出 A4 單頁範圍，系統已自動為您微調字級」提示，去除干擾性按鈕。</li>
+              <li><strong>多格式匯出</strong>：支援高品質 PDF 下載、Word (.docx) 及 PowerPoint (.pptx) 格式匯出，便於機構整合或簡報歸檔。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary class="guide-toggle">🔒 資料安全、API Key 跨裝置管理與護理責任</summary>
+          <div class="guide-content">
+            <p>住民隱私、金鑰管理與臨床覆核責任說明：</p>
+            <ul>
+              <li><strong>本機純前端運作原則</strong>：本系統沒有後端集中資料庫保存住民病歷與個資；未勾選「允許自動聯網翻譯」且未設定 API Key 時，所有資料皆於瀏覽器端本地離線運算，檔案與文字絕不外傳；使用 AI 雲端分析時，資料直接加密傳輸至 Google Gemini API。</li>
+              <li><strong>API Key 本機儲存與跨裝置使用說明</strong>：API Key 採用純前端本機儲存（localStorage）技術，資料僅保存在當前電腦的瀏覽器中，換班使用免重複輸入。<strong>若更換不同電腦、不同瀏覽器或開啟無痕模式，因各環境獨立隔離，需於首次使用時重新設定一次</strong>；系統亦支援 4 位數字管理密碼鎖定，兼顧跨班便利與金鑰隱私安全。</li>
+              <li><strong>臨床護理人員最終雙重核對責任</strong>：AI 辨識結果僅供整理排版輔助，護理人員仍具備依機構 SOP、實際住民現況及法定評鑑標準逐項核對修改之最終專業責任。</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 本地離線腳本 -->
+  <script src="vendor/docx.iife.js"></script>
+  <script src="vendor/html2pdf.bundle.min.js"></script>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="vendor/pptxgen.bundle.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/translation.js"></script>
+  <script src="js/photo.js"></script>
+  <script src="js/fit-page.js"></script>
+  <script src="js/docx-export.js"></script>
+  <script src="js/pptx-export.js"></script>
+  <script src="js/pdf-export.js"></script>
+  
+  <script src="vendor/pdf.min.js"></script>
+  <script src="js/ai-assistant.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
