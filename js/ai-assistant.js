@@ -386,12 +386,24 @@ const AiAssistant=(()=>{
     });
   }
   async function passwordHash(value){const bytes=new TextEncoder().encode(`resident-card-ai-settings-20260927:${value}`);const digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).map(v=>v.toString(16).padStart(2,'0')).join('');}
+  function openKeyAuth(){
+    const isFirstSetup=!localStorage.getItem(PASSWORD_HASH_KEY);
+    settingsUnlocked=false;
+    $('apiKeyAuthInput').value='';
+    $('apiKeyAuthConfirmInput').value='';
+    $('apiKeyAuthDescription').textContent=isFirstSetup
+      ? '首次設定 API Key 前，請先建立 4 位數管理密碼。之後每次調整或清除金鑰時，都會先要求驗證。'
+      : '「設定 API Key」涉及使用者核心金鑰與存取權限，請輸入管理密碼解鎖：';
+    $('apiKeyAuthLabel').textContent=isFirstSetup?'設定管理密碼：':'管理密碼：';
+    $('apiKeyAuthInput').placeholder=isFirstSetup?'設定 4 位數管理密碼':'請輸入 4 位數管理密碼';
+    $('apiKeyAuthInput').autocomplete=isFirstSetup?'new-password':'off';
+    $('apiKeyAuthConfirmField').hidden=!isFirstSetup;
+    $('apiKeyAuthSubmitBtn').textContent=isFirstSetup?'建立並繼續':'確認解鎖';
+    $('apiKeyAuthStatus').textContent=isFirstSetup?'此密碼僅用於本機金鑰設定入口；系統只保存不可逆雜湊，不保存明碼。':'🔒 請輸入 4 位數管理密碼解鎖';
+    $('apiKeyAuthStatus').style.color='#64748b';
+    $('apiKeyAuthDialog')?.showModal();
+  }
   function showSettings(){
-    const hasPassword=Boolean(localStorage.getItem(PASSWORD_HASH_KEY));
-    $('aiSettingsPassword').value='';
-    $('aiSettingsPasswordConfirm').value='';
-    $('ai-password-setup-fields').style.display=hasPassword?'none':'block';
-    $('ai-password-setup-hint').textContent=hasPassword?'已設定管理密碼；若要修改請先使用下方驗證視窗。':'此密碼用來保護變更或清除 AI 金鑰（選填；若個人使用可直接留空，不影響金鑰儲存）。';
     const currentKey = getApiKey();
     if($('geminiApiKeyInput')){
       $('geminiApiKeyInput').value = currentKey;
@@ -403,9 +415,19 @@ const AiAssistant=(()=>{
     }
     $('aiKeyDialog')?.showModal();
   }
-  async function verifyPassword(){const value=$('apiKeyAuthInput').value.trim(),saved=localStorage.getItem(PASSWORD_HASH_KEY);if(!saved||await passwordHash(value)!==saved){$('apiKeyAuthStatus').textContent='管理密碼不正確。';$('apiKeyAuthStatus').style.color='#b91c1c';return;}settingsUnlocked=true;$('apiKeyAuthDialog')?.close();showSettings();}
+  async function verifyPassword(){
+    const value=$('apiKeyAuthInput').value.trim(),saved=localStorage.getItem(PASSWORD_HASH_KEY),isFirstSetup=!saved;
+    if(!/^\d{4}$/.test(value)){ $('apiKeyAuthStatus').textContent='請輸入 4 位數管理密碼。';$('apiKeyAuthStatus').style.color='#b91c1c';return; }
+    if(isFirstSetup){
+      if(value!==$('apiKeyAuthConfirmInput').value.trim()){ $('apiKeyAuthStatus').textContent='兩次管理密碼不一致。';$('apiKeyAuthStatus').style.color='#b91c1c';return; }
+      try{localStorage.setItem(PASSWORD_HASH_KEY,await passwordHash(value));}catch{ $('apiKeyAuthStatus').textContent='無法在此瀏覽器保存管理密碼，請確認本機儲存空間可用。';$('apiKeyAuthStatus').style.color='#b91c1c';return;}
+    }else if(await passwordHash(value)!==saved){
+      $('apiKeyAuthStatus').textContent='管理密碼不正確。';$('apiKeyAuthStatus').style.color='#b91c1c';return;
+    }
+    settingsUnlocked=true;$('apiKeyAuthDialog')?.close();showSettings();
+  }
   function bindKey(){
-    $('btn-open-ai-api-key')?.addEventListener('click',()=>localStorage.getItem(PASSWORD_HASH_KEY)?$('apiKeyAuthDialog')?.showModal():showSettings());$('aiKeyCloseBtn')?.addEventListener('click',()=>$('aiKeyDialog')?.close());$('apiKeyAuthCloseBtn')?.addEventListener('click',()=>$('apiKeyAuthDialog')?.close());$('apiKeyAuthCancelBtn')?.addEventListener('click',()=>$('apiKeyAuthDialog')?.close());$('apiKeyAuthSubmitBtn')?.addEventListener('click',verifyPassword);
+    $('btn-open-ai-api-key')?.addEventListener('click',openKeyAuth);$('aiKeyCloseBtn')?.addEventListener('click',()=>$('aiKeyDialog')?.close());$('apiKeyAuthCloseBtn')?.addEventListener('click',()=>$('apiKeyAuthDialog')?.close());$('apiKeyAuthCancelBtn')?.addEventListener('click',()=>$('apiKeyAuthDialog')?.close());$('apiKeyAuthSubmitBtn')?.addEventListener('click',verifyPassword);$('apiKeyAuthInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')verifyPassword();});$('apiKeyAuthConfirmInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')verifyPassword();});
     $('aiKeyClearBtn')?.addEventListener('click',()=>{
       if(localStorage.getItem(PASSWORD_HASH_KEY)&&!settingsUnlocked)return keyMsg('err','請先完成管理密碼驗證。');
       setApiKey('');
@@ -417,17 +439,9 @@ const AiAssistant=(()=>{
       updateKey();
     });
     $('aiKeySaveBtn')?.addEventListener('click',async()=>{
-      const k=$('geminiApiKeyInput').value.trim(),hasPassword=Boolean(localStorage.getItem(PASSWORD_HASH_KEY));
+      const k=$('geminiApiKeyInput').value.trim();
       if(!k)return keyMsg('err','請先貼上 API Key。');
-      if(!hasPassword){
-        const p=$('aiSettingsPassword').value.trim(),confirm=$('aiSettingsPasswordConfirm').value.trim();
-        if(p || confirm){
-          if(!/^\d{4}$/.test(p))return keyMsg('err','若要設定管理密碼，請輸入 4 位數字。');
-          if(p!==confirm)return keyMsg('err','兩次管理密碼不一致。');
-          localStorage.setItem(PASSWORD_HASH_KEY,await passwordHash(p));
-          settingsUnlocked=true;
-        }
-      } else if(!settingsUnlocked) {
+      if(!localStorage.getItem(PASSWORD_HASH_KEY)||!settingsUnlocked) {
         return keyMsg('err','請先完成管理密碼驗證。');
       }
       setApiKey(k);
