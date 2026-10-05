@@ -671,12 +671,16 @@
         </button>
       </div>
       <div class="ai-key-dialog-body">
-        <p style="margin: 0 0 12px; font-size: 14px; color: var(--forest-2); line-height: 1.5;">
+        <p id="apiKeyAuthDescription" style="margin: 0 0 12px; font-size: 14px; color: var(--forest-2); line-height: 1.5;">
           「設定 API Key」涉及使用者核心金鑰與存取權限，請輸入管理密碼解鎖：
         </p>
         <div class="field" style="margin-bottom: 12px;">
-          <label for="apiKeyAuthInput" style="font-weight: 700; display: block; margin-bottom: 6px;">管理密碼：</label>
+          <label id="apiKeyAuthLabel" for="apiKeyAuthInput" style="font-weight: 700; display: block; margin-bottom: 6px;">管理密碼：</label>
           <input type="password" id="apiKeyAuthInput" class="form-input" placeholder="請輸入 4 位數管理密碼" autocomplete="off" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" style="letter-spacing: 0.25em; font-size: 18px; text-align: center; padding: 10px; width: 100%;">
+        </div>
+        <div class="field" id="apiKeyAuthConfirmField" style="margin-bottom: 12px;" hidden>
+          <label for="apiKeyAuthConfirmInput" style="font-weight: 700; display: block; margin-bottom: 6px;">再次輸入管理密碼：</label>
+          <input type="password" id="apiKeyAuthConfirmInput" class="form-input" placeholder="再次輸入相同 4 位數密碼" autocomplete="new-password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" style="letter-spacing: 0.25em; font-size: 18px; text-align: center; padding: 10px; width: 100%;">
         </div>
         <div id="apiKeyAuthStatus" style="font-size: 13.5px; min-height: 22px; margin-bottom: 12px; font-weight: 700; transition: all .2s ease;"></div>
         <div class="field-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
@@ -700,13 +704,6 @@
         <p style="margin: 0 0 10px; font-size: 15px; color: var(--forest-2); font-weight: 700;">請輸入您的 Google Gemini API Key（免費版即可）：</p>
         <div class="field">
           <input type="password" id="geminiApiKeyInput" class="form-input" placeholder="請貼上您的 Google Gemini API Key（如 AIzaSy 或 AQ 開頭...）" autocomplete="off" style="width: 100%; font-family: monospace; font-size: 14px; padding: 10px;">
-        </div>
-        <div id="ai-password-setup-fields" style="margin-top: 12px;">
-          <label for="aiSettingsPassword" style="font-weight: 700; display: block; margin-bottom: 6px;">管理密碼（首次設定必填，4 位數）</label>
-          <input type="password" id="aiSettingsPassword" class="form-input" placeholder="設定 4 位數管理密碼" autocomplete="new-password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" style="width: 100%; letter-spacing: 0.25em; font-size: 17px; text-align: center; padding: 10px;">
-          <label for="aiSettingsPasswordConfirm" style="font-weight: 700; display: block; margin: 10px 0 6px;">確認管理密碼</label>
-          <input type="password" id="aiSettingsPasswordConfirm" class="form-input" placeholder="再次輸入相同 4 位數密碼" autocomplete="new-password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" style="width: 100%; letter-spacing: 0.25em; font-size: 17px; text-align: center; padding: 10px;">
-          <p id="ai-password-setup-hint" style="margin: 8px 0 0; font-size: 13px; color: #64748b; line-height: 1.45;">此密碼用來保護變更或清除 AI 金鑰；僅保存不可逆雜湊，不保存明碼。</p>
         </div>
         <div id="aiKeyStatusMsg" style="margin: 10px 0 0; font-size: 13.5px; line-height: 1.5; display: none; padding: 8px 12px; border-radius: 8px; font-weight: 700;"></div>
         <div class="ai-key-guide">
