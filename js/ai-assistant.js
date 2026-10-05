@@ -1,6 +1,6 @@
 /* AI 智慧輔助：只帶入原始資料明確記載的資訊；不足或矛盾資訊保留空白並提示。 */
 const AiAssistant=(()=>{
-  const KEY='resident_card_gemini_api_key_session',PASSWORD_HASH_KEY='resident_card_ai_settings_password_hash',HEALTH_KEY='resident_card_gemini_health_session',HEALTH_TTL=15*60*1000; let files=[],dedicatedHeadshotFile=null,settingsUnlocked=false,activeAnalysisAbort=null,analysisRunning=false,transientHealth=null;
+  const KEY='resident_card_gemini_api_key_session',PASSWORD_HASH_KEY='resident_card_ai_settings_password_hash',AUTH_FAILURE_KEY='resident_card_ai_settings_auth_failures',AUTH_LOCK_KEY='resident_card_ai_settings_auth_locked_until',AUTH_MAX_FAILURES=5,AUTH_LOCK_DURATION=15*60*1000,HEALTH_KEY='resident_card_gemini_health_session',HEALTH_TTL=15*60*1000; let files=[],dedicatedHeadshotFile=null,settingsUnlocked=false,activeAnalysisAbort=null,analysisRunning=false,transientHealth=null,authLockTimer=null;
   const labels={nameZh:'中文姓名',nameSecondary:'第二語言姓名',gender:'性別',medicalHistory:'主要疾病',consciousness:'外表意識',hearing:'聽力狀態',vision:'視力狀態',dietTexture:'飲食形態',dietAssistance:'進食協助',transferAbility:'移位能力',aids:'使用輔具',elimination:'排泄方式',precautions:'重要注意事項'};
   const allowed={consciousness:['清醒','混亂','譫妄','嗜睡','木僵','昏迷','半昏迷','植物人','其他'],hearing:['正常','輕度重聽','重聽','需戴助聽器','需大聲說話','需大聲面對面說話','嚴重重聽','全聾','其他'],vision:['正常','視力模糊退化','需戴眼鏡','白內障','青光眼','弱視','單眼失明','全盲','其他'],dietTexture:['正常餐','剪菜飯','攪菜粥','軟質飲食','碎食飲食','流質飲食','低鹽飲食','糖尿病低糖餐','限制水分','其他'],dietAssistance:['可自行進食','需部分協助進食','需完全協助餵食','鼻胃管灌食','胃造口灌食','其他'],transferAbility:['可自行走動','需扶持','需協助上下床','需2人協助','完全臥床','絕對臥床','其他','待確認'],aids:['輪椅','助行器','單拐','四腳拐','拐杖','氣墊床','移位機','便盆椅','無使用輔具'],elimination:['自行如廁','尿布','尿褲','留置導尿管','便盆椅','尿壺','腸造口照護'],precautions:['小心跌倒','翻身擺位','拍背排痰','蒸氣吸入','血糖監測','拒藥傾向','藏藥行為','安寧療護','嗆咳風險','左手禁治療','右手禁治療','壓傷高風險','防自拔管路','補充水分','限制水分','傷口照護','情緒關懷','約束安全']};
   const $=id=>document.getElementById(id), esc=s=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -386,6 +386,32 @@ const AiAssistant=(()=>{
     });
   }
   async function passwordHash(value){const bytes=new TextEncoder().encode(`resident-card-ai-settings-20260927:${value}`);const digest=await crypto.subtle.digest('SHA-256',bytes);return Array.from(new Uint8Array(digest)).map(v=>v.toString(16).padStart(2,'0')).join('');}
+  function getAuthLockUntil(){const until=Number(localStorage.getItem(AUTH_LOCK_KEY)||0);if(until<=Date.now()){try{localStorage.removeItem(AUTH_LOCK_KEY);localStorage.removeItem(AUTH_FAILURE_KEY);}catch{}return 0;}return until;}
+  function formatLockRemaining(until){const seconds=Math.max(1,Math.ceil((until-Date.now())/1000)),minutes=Math.floor(seconds/60),remainder=String(seconds%60).padStart(2,'0');return `${minutes}:${remainder}`;}
+  function setAuthControlsLocked(locked){['apiKeyAuthInput','apiKeyAuthConfirmInput','apiKeyAuthSubmitBtn'].forEach(id=>{const el=$(id);if(el)el.disabled=locked;});}
+  function stopAuthLockTimer(){if(authLockTimer){clearInterval(authLockTimer);authLockTimer=null;}}
+  function renderAuthLock(){
+    const until=getAuthLockUntil();
+    if(!until){stopAuthLockTimer();setAuthControlsLocked(false);return false;}
+    setAuthControlsLocked(true);
+    $('apiKeyAuthStatus').textContent=`因連續輸入錯誤 ${AUTH_MAX_FAILURES} 次，金鑰設定已暫時鎖定。請於 ${formatLockRemaining(until)} 後再試。`;
+    $('apiKeyAuthStatus').style.color='#b91c1c';
+    return true;
+  }
+  function startAuthLockTimer(){stopAuthLockTimer();if(renderAuthLock())authLockTimer=setInterval(renderAuthLock,1000);}
+  function recordAuthFailure(){
+    const failures=Number(localStorage.getItem(AUTH_FAILURE_KEY)||0)+1;
+    if(failures>=AUTH_MAX_FAILURES){
+      const until=Date.now()+AUTH_LOCK_DURATION;
+      try{localStorage.setItem(AUTH_LOCK_KEY,String(until));localStorage.removeItem(AUTH_FAILURE_KEY);}catch{}
+      startAuthLockTimer();
+      return;
+    }
+    try{localStorage.setItem(AUTH_FAILURE_KEY,String(failures));}catch{}
+    $('apiKeyAuthStatus').textContent=`管理密碼不正確，還可嘗試 ${AUTH_MAX_FAILURES-failures} 次。`;
+    $('apiKeyAuthStatus').style.color='#b91c1c';
+  }
+  function clearAuthFailures(){try{localStorage.removeItem(AUTH_FAILURE_KEY);localStorage.removeItem(AUTH_LOCK_KEY);}catch{}stopAuthLockTimer();}
   function openKeyAuth(){
     const isFirstSetup=!localStorage.getItem(PASSWORD_HASH_KEY);
     settingsUnlocked=false;
@@ -401,6 +427,8 @@ const AiAssistant=(()=>{
     $('apiKeyAuthSubmitBtn').textContent=isFirstSetup?'建立並繼續':'確認解鎖';
     $('apiKeyAuthStatus').textContent=isFirstSetup?'此密碼僅用於本機金鑰設定入口；系統只保存不可逆雜湊，不保存明碼。':'🔒 請輸入 4 位數管理密碼解鎖';
     $('apiKeyAuthStatus').style.color='#64748b';
+    setAuthControlsLocked(false);
+    if(!isFirstSetup&&renderAuthLock())startAuthLockTimer();
     $('apiKeyAuthDialog')?.showModal();
   }
   function showSettings(){
@@ -417,17 +445,18 @@ const AiAssistant=(()=>{
   }
   async function verifyPassword(){
     const value=$('apiKeyAuthInput').value.trim(),saved=localStorage.getItem(PASSWORD_HASH_KEY),isFirstSetup=!saved;
+    if(!isFirstSetup&&getAuthLockUntil()){startAuthLockTimer();return;}
     if(!/^\d{4}$/.test(value)){ $('apiKeyAuthStatus').textContent='請輸入 4 位數管理密碼。';$('apiKeyAuthStatus').style.color='#b91c1c';return; }
     if(isFirstSetup){
       if(value!==$('apiKeyAuthConfirmInput').value.trim()){ $('apiKeyAuthStatus').textContent='兩次管理密碼不一致。';$('apiKeyAuthStatus').style.color='#b91c1c';return; }
       try{localStorage.setItem(PASSWORD_HASH_KEY,await passwordHash(value));}catch{ $('apiKeyAuthStatus').textContent='無法在此瀏覽器保存管理密碼，請確認本機儲存空間可用。';$('apiKeyAuthStatus').style.color='#b91c1c';return;}
     }else if(await passwordHash(value)!==saved){
-      $('apiKeyAuthStatus').textContent='管理密碼不正確。';$('apiKeyAuthStatus').style.color='#b91c1c';return;
+      recordAuthFailure();return;
     }
-    settingsUnlocked=true;$('apiKeyAuthDialog')?.close();showSettings();
+    clearAuthFailures();settingsUnlocked=true;$('apiKeyAuthDialog')?.close();showSettings();
   }
   function bindKey(){
-    $('btn-open-ai-api-key')?.addEventListener('click',openKeyAuth);$('aiKeyCloseBtn')?.addEventListener('click',()=>$('aiKeyDialog')?.close());$('apiKeyAuthCloseBtn')?.addEventListener('click',()=>$('apiKeyAuthDialog')?.close());$('apiKeyAuthCancelBtn')?.addEventListener('click',()=>$('apiKeyAuthDialog')?.close());$('apiKeyAuthSubmitBtn')?.addEventListener('click',verifyPassword);$('apiKeyAuthInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')verifyPassword();});$('apiKeyAuthConfirmInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')verifyPassword();});
+    $('btn-open-ai-api-key')?.addEventListener('click',openKeyAuth);$('aiKeyCloseBtn')?.addEventListener('click',()=>$('aiKeyDialog')?.close());$('apiKeyAuthCloseBtn')?.addEventListener('click',()=>{$('apiKeyAuthDialog')?.close();stopAuthLockTimer();});$('apiKeyAuthCancelBtn')?.addEventListener('click',()=>{$('apiKeyAuthDialog')?.close();stopAuthLockTimer();});$('apiKeyAuthDialog')?.addEventListener('close',stopAuthLockTimer);$('apiKeyAuthSubmitBtn')?.addEventListener('click',verifyPassword);$('apiKeyAuthInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')verifyPassword();});$('apiKeyAuthConfirmInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')verifyPassword();});
     $('aiKeyClearBtn')?.addEventListener('click',()=>{
       if(localStorage.getItem(PASSWORD_HASH_KEY)&&!settingsUnlocked)return keyMsg('err','請先完成管理密碼驗證。');
       setApiKey('');
