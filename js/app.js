@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 個案資料卡產生器 - 主應用程式邏輯 V2.2 (App JS)
  * 嚴格對齊上傳設計版型：
  * 1. 綠色膠囊標籤 + 雙語對稱排版
@@ -327,7 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
   bindFormEvents();
   bindActionButtons();
   initGuideDialog();
-  initAppVersion();
   clearFormData(); // 確保開局左側欄位 100% 清空無預設勾選/選取項目
   window.addEventListener('resize', updatePreviewScale);
 });
@@ -2062,11 +2061,3 @@ window.triggerCardRender = renderCardPreview;
 window.resident = resident;
 window.QuoteManager = QuoteManager;
 window.updatePreviewScale = updatePreviewScale;
-
-function initAppVersion() {
-  const version = document.getElementById('appVersion');
-  if (!version) return;
-  const value = '115/09/16';
-  version.textContent = `版本日期：${value}｜功能優化`;
-  version.setAttribute('aria-label', '版本日期：115年09月16日，功能優化');
-}
