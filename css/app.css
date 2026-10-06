@@ -1559,17 +1559,63 @@ input#input-name-zh.is-unconfirmed,
   background: #fff6e6;
 }
 
-.guide-quick-start strong {
-  display: block;
+.guide-quick-start-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #854016;
   font-size: 17px;
+  padding-bottom: 9px;
+  border-bottom: 1px dashed #e6c693;
 }
 
-.guide-quick-start ol {
-  margin: 8px 0 0;
-  padding-left: 24px;
-  font-size: 15px;
-  line-height: 1.7;
+.guide-steps-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-step-item {
+  padding: 12px 14px;
+  border: 1px solid #efd7b4;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .82);
+  color: #3f4742;
+  font-size: 14px;
+  line-height: 1.68;
+}
+
+.guide-step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guide-step-badge {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #d9862c;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.guide-step-name { color: #1a4231; }
+
+.guide-step-desc,
+.guide-step-sublist {
+  margin: 7px 0 0;
+}
+
+.guide-step-sublist {
+  padding-left: 21px;
+}
+
+.guide-step-sublist li + li {
+  margin-top: 5px;
 }
 
 .guide-list {
