@@ -806,33 +806,41 @@
         <button type="button" class="guide-close-btn" id="guideCloseBtn" aria-label="關閉使用說明" title="關閉">×</button>
       </div>
       <section class="guide-quick-start" aria-label="快速開始">
-        <strong>快速開始（4 步驟輕鬆產出）</strong>
-        <ol>
-          <li><strong>選擇照護第二語言</strong>：預設為越南語，可依外籍照服同仁母語切換英語、印尼語、菲律賓語、泰語，或切換為純中文模式；各欄位均支援自動聯網精準翻譯。</li>
-          <li><strong>建立新個案或 AI 智慧辨識（選用）</strong>：
-            <ul>
+        <div class="guide-quick-start-title"><span aria-hidden="true">🚀</span><strong>快速開始（4 步驟輕鬆產出）</strong></div>
+        <ol class="guide-steps-list">
+          <li class="guide-step-item">
+            <div class="guide-step-header"><span class="guide-step-badge">步驟 1</span><strong class="guide-step-name">選擇照護第二語言</strong></div>
+            <p class="guide-step-desc">預設為越南語，可依外籍照服同仁母語切換英語、印尼語、菲律賓語、泰語，或切換為純中文模式；各欄位均支援自動聯網精準翻譯。</p>
+          </li>
+          <li class="guide-step-item">
+            <div class="guide-step-header"><span class="guide-step-badge">步驟 2</span><strong class="guide-step-name">建立新個案或 AI 智慧辨識（選用）</strong></div>
+            <ul class="guide-step-sublist">
               <li><strong>開新個案</strong>：點擊左側最頂端獨立醒目的紅色「🧹 一鍵開新個案（清空表單）」按鈕，徹底清空表單、大頭照與上傳暫存，確保建立全新個案不遺留舊資料。</li>
-              <li><strong>AI 輔助辨識</strong>：點擊「✨ AI 智慧輔助（出院病摘／相關資料自動辨識）」，支援上傳出院病摘、長照定期評估表、交班資料之<strong>Word (.docx/.doc)、PowerPoint (.pptx/.ppt)、Excel (.xlsx/.xls)、PDF (上限 12MB)、圖片 (JPG/PNG/WebP) 或純文字/CSV</strong>。系統以雙引擎精準提取欄位，AI 分析完成後<strong>中文姓名與外語姓名音譯確實自動帶入</strong>；請護理人員落實雙重核對。</li>
+              <li><strong>AI 輔助辨識</strong>：點擊「✨ AI 智慧輔助（出院病摘／相關資料自動辨識）」，支援上傳出院病摘、長照定期評估表、交班資料之 <strong>Word (.docx/.doc)、PowerPoint (.pptx/.ppt)、Excel (.xlsx/.xls)、PDF (上限 12MB)、圖片 (JPG/PNG/WebP) 或純文字/CSV</strong>。系統以雙引擎精準提取欄位，AI 分析完成後<strong>中文姓名與外語姓名音譯確實自動帶入</strong>；請護理人員落實雙重核對。</li>
             </ul>
           </li>
-          <li><strong>檢視或手動調整左側欄位</strong>：
-            <ul>
-              <li>標記紅色 <span class="required">*</span> 為必填欄位；六大照護區塊旗下內容與複選項目已<strong>全面統一固定字級（中文 28px、外語 21px）</strong>，排版清晰不忽大忽小；聽力與視力字體鎖定相同大字級。</li>
+          <li class="guide-step-item">
+            <div class="guide-step-header"><span class="guide-step-badge">步驟 3</span><strong class="guide-step-name">檢視或手動調整左側欄位</strong></div>
+            <ul class="guide-step-sublist">
+              <li><strong>必填與字級規範</strong>：標記紅色 <span class="required">*</span> 為必填欄位；六大照護區塊旗下內容與複選項目已<strong>全面統一固定字級（中文 28px、外語 21px）</strong>，排版清晰不忽大忽小；聽力與視力字體鎖定相同大字級。</li>
               <li><strong>聽力與視力無法判斷時</strong>：若長者因木僵、中風失語、認知退化無法評估，可選擇「其他 (自行輸入)」並填寫簡要描述（如「不知道」、「無法判斷」）。</li>
               <li><strong>移位能力新增「絕對臥床」</strong>：除可自行走動、需扶持、需協助上下床、需2人協助、完全臥床外，新增<strong>「絕對臥床」</strong>選項（代表嚴格醫療限制禁止下床），具備專業 5 國語言對照。</li>
             </ul>
           </li>
-          <li><strong>大頭貼確認與一鍵下載 PDF</strong>：可於專屬照片區上傳住民照片並進行 334:254 比例裁切（尺寸絕對鎖定）。點擊「📥 下載 PDF」時，系統會自動檢核未完成欄位並以紅色標記提醒，確認後即可產出 A4 橫式單頁資料卡。</li>
+          <li class="guide-step-item">
+            <div class="guide-step-header"><span class="guide-step-badge">步驟 4</span><strong class="guide-step-name">大頭貼確認與一鍵下載 PDF</strong></div>
+            <p class="guide-step-desc">可於專屬照片區上傳住民照片並進行 334:254 比例裁切（尺寸絕對鎖定）。點擊「📥 下載 PDF」時，系統會自動檢核未完成欄位並以紅色標記提醒，確認後即可產出 A4 橫式單頁資料卡。</p>
+          </li>
         </ol>
       </section>
       <div class="guide-list">
-        <details open>
+        <details>
           <summary class="guide-toggle">📖 個案資料卡最新版面配置與字級規範</summary>
           <div class="guide-content">
             <p>本產生器專為台灣長照機構（護理之家、安養護機構、日照中心）住民床頭卡、照護卡、交班速讀卡設計：</p>
             <ul>
               <li><strong>頂部狀態列精巧舒適化</strong>：將「📄 住民資料卡預覽 (A4 橫式)」與「🟢 版面正常（標準最佳閱讀字級）」縮小包覆於精緻膠囊區塊內，視覺舒適不突兀。</li>
-              <li><strong>六大照護區塊最新版面配置</strong>：
+              <li><strong>六大照護區塊最新版面配置（左側與右側分欄）</strong>
                 <ul>
                   <li><strong>左側欄</strong>：👁 外表意識 ➔ 👂 聽力與視力 ➔ ⚠ 注意事項（置於左下焦點區）。</li>
                   <li><strong>右側欄</strong>：🥣 飲食 ➔ 🚽 排泄 ➔ ♿ 輔具與移位（置於右下）。</li>
@@ -960,7 +968,7 @@
             <p>住民隱私、金鑰管理與臨床覆核責任說明：</p>
             <ul>
               <li><strong>本機純前端運作原則</strong>：本系統沒有後端集中資料庫保存住民病歷與個資；未勾選「允許自動聯網翻譯」且未設定 API Key 時，所有資料皆於瀏覽器端本地離線運算，檔案與文字絕不外傳；使用 AI 雲端分析時，資料直接加密傳輸至 Google Gemini API。</li>
-              <li><strong>API Key 本機儲存與跨裝置使用說明</strong>：API Key 採用純前端本機儲存（localStorage）技術，資料僅保存在當前電腦的瀏覽器中，換班使用免重複輸入。<strong>若更換不同電腦、不同瀏覽器或開啟無痕模式，因各環境獨立隔離，需於首次使用時重新設定一次</strong>；系統亦支援 4 位數字管理密碼鎖定，兼顧跨班便利與金鑰隱私安全。</li>
+              <li><strong>API Key 與本機管理密碼</strong>：金鑰只保存在目前瀏覽器的本機儲存空間；更換電腦、瀏覽器或無痕視窗時須重新設定。首次設定金鑰前需建立 4 位數管理密碼；之後進入金鑰設定需先驗證。連續輸入錯誤 3 次會暫時鎖定 1 分鐘。<strong>這是同一台裝置上的入口防護，不等同帳號登入、伺服器端加密或存取權限管理。</strong></li>
               <li><strong>臨床護理人員最終雙重核對責任</strong>：AI 辨識結果僅供整理排版輔助，護理人員仍具備依機構 SOP、實際住民現況及法定評鑑標準逐項核對修改之最終專業責任。</li>
             </ul>
           </div>
