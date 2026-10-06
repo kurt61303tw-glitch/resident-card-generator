@@ -1840,3 +1840,23 @@ input#input-name-zh.is-unconfirmed,
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 55%, #d97706 100%) !important;
   box-shadow: 0 0 24px rgba(245, 158, 11, 0.95), 0 0 36px rgba(251, 191, 36, 0.75), 0 5px 14px rgba(180, 83, 9, 0.45) !important;
 }
+
+/* 右下角版本日期（參考護理紀錄產生器） */
+.app-version {
+  position: fixed;
+  right: 18px;
+  bottom: 12px;
+  z-index: 8;
+  margin: 0;
+  color: var(--moss, #5e745f);
+  font-size: 13px;
+  line-height: 1.35;
+  letter-spacing: .02em;
+  pointer-events: none;
+}
+
+@media print {
+  .app-version {
+    display: none !important;
+  }
+}
