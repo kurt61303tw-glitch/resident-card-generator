@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -671,20 +671,16 @@
         </button>
       </div>
       <div class="ai-key-dialog-body">
-        <p id="apiKeyAuthDescription" style="margin: 0 0 12px; font-size: 14px; color: var(--forest-2); line-height: 1.5;">
+        <p style="margin: 0 0 12px; font-size: 14px; color: var(--forest-2); line-height: 1.5;">
           「設定 API Key」涉及使用者核心金鑰與存取權限，請輸入管理密碼解鎖：
         </p>
         <div class="field" style="margin-bottom: 12px;">
-          <label id="apiKeyAuthLabel" for="apiKeyAuthInput" style="font-weight: 700; display: block; margin-bottom: 6px;">管理密碼：</label>
+          <label for="apiKeyAuthInput" style="font-weight: 700; display: block; margin-bottom: 6px;">管理密碼：</label>
           <input type="password" id="apiKeyAuthInput" class="form-input" placeholder="請輸入 4 位數管理密碼" autocomplete="off" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" style="letter-spacing: 0.25em; font-size: 18px; text-align: center; padding: 10px; width: 100%;">
-        </div>
-        <div class="field" id="apiKeyAuthConfirmField" style="margin-bottom: 12px;" hidden>
-          <label for="apiKeyAuthConfirmInput" style="font-weight: 700; display: block; margin-bottom: 6px;">再次輸入管理密碼：</label>
-          <input type="password" id="apiKeyAuthConfirmInput" class="form-input" placeholder="再次輸入相同 4 位數密碼" autocomplete="new-password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" style="letter-spacing: 0.25em; font-size: 18px; text-align: center; padding: 10px; width: 100%;">
         </div>
         <div id="apiKeyAuthStatus" style="font-size: 13.5px; min-height: 22px; margin-bottom: 12px; font-weight: 700; transition: all .2s ease;"></div>
         <div class="field-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
-          <button type="button" class="btn btn-secondary" id="apiKeyAuthCancelBtn">取消</button>
+          <button type="button" class="btn btn-outline" id="apiKeyAuthCancelBtn">取消</button>
           <button type="button" class="btn btn-primary" id="apiKeyAuthSubmitBtn">確認解鎖</button>
         </div>
       </div>
@@ -712,16 +708,16 @@
             <li>前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio 官網 (點此開新分頁)</a>。</li>
             <li>以任意 Google 帳號登入後，點擊藍色 <strong>「Create API key」</strong> 按鈕。</li>
             <li>複製產生的金鑰代碼（常見如 <code>AIzaSy</code>、<code>AQ</code> 等開頭格式），貼在上方輸入框中。</li>
-            <li>可先點擊 <strong>「測試連線」</strong> 驗收 Google 官方連線通暢，再點擊 <strong>「儲存金鑰」</strong>。Key 儲存於本機瀏覽器，提供手動清除與密碼鎖定功能，換班開啟免重複輸入。</li>
+            <li>可先點擊 <strong>「測試連線」</strong> 驗收 Google 官方連線通暢，再點擊 <strong>「儲存金鑰」</strong>。系統通過官方連線驗證後安全保存在本機，打開即用、免重複輸入！</li>
           </ol>
         </div>
         <div style="margin: 12px 0 0; padding: 8px 12px; background: #fff8e6; border: 1px solid #f2c779; border-radius: 6px; font-size: 13px; color: #7a4b04; line-height: 1.5;">
-          ⚠️ <strong>隱私提醒</strong>：設定並使用 AI 金鑰後，按「開始自動辨識」會將選取文字／檔案傳送至 Google Gemini 處理；請只提供必要資料，並依機構規範先遮蔽不必要個資。使用完畢可於下方點擊「登出 / 清除已存金鑰」。
+          ⚠️ <strong>資安提醒</strong>：若自行設定 AI 金鑰，金鑰僅儲存在目前瀏覽器；請勿在共用電腦或公開裝置儲存金鑰。使用完畢可於下方點擊「清除已存金鑰」。
         </div>
         <div class="ai-key-dialog-footer">
-          <button type="button" class="btn btn-secondary" id="aiKeyClearBtn" style="color: #dc2626; border-color: #fca5a5;">登出 / 清除已存金鑰</button>
-          <button type="button" class="btn btn-secondary" id="aiKeyTestBtn" style="font-weight: 700;">測試連線</button>
-          <button type="button" class="btn btn-primary" id="aiKeySaveBtn" style="font-weight: 800;">儲存金鑰</button>
+          <button type="button" class="btn btn-outline" id="aiKeyClearBtn">清除已存金鑰</button>
+          <button type="button" class="btn btn-secondary" id="aiKeyTestBtn">測試連線</button>
+          <button type="button" class="btn btn-primary" id="aiKeySaveBtn">儲存金鑰</button>
         </div>
       </div>
     </div>
@@ -806,21 +802,35 @@
         <button type="button" class="guide-close-btn" id="guideCloseBtn" aria-label="關閉使用說明" title="關閉">×</button>
       </div>
       <section class="guide-quick-start" aria-label="快速開始">
-        <div class="guide-quick-start-title"><span aria-hidden="true">🚀</span><strong>快速開始（4 步驟輕鬆產出）</strong></div>
+        <div class="guide-quick-start-title">
+          <span>🚀</span>
+          <strong>快速開始（4 步驟輕鬆產出）</strong>
+        </div>
         <ol class="guide-steps-list">
           <li class="guide-step-item">
-            <div class="guide-step-header"><span class="guide-step-badge">步驟 1</span><strong class="guide-step-name">選擇照護第二語言</strong></div>
-            <p class="guide-step-desc">預設為越南語，可依外籍照服同仁母語切換英語、印尼語、菲律賓語、泰語，或切換為純中文模式；各欄位均支援自動聯網精準翻譯。</p>
+            <div class="guide-step-header">
+              <span class="guide-step-badge">步驟 1</span>
+              <strong class="guide-step-name">選擇照護第二語言</strong>
+            </div>
+            <p class="guide-step-desc">
+              預設為越南語，可依外籍照服同仁母語切換英語、印尼語、菲律賓語、泰語，或切換為純中文模式；各欄位均支援自動聯網精準翻譯。
+            </p>
           </li>
           <li class="guide-step-item">
-            <div class="guide-step-header"><span class="guide-step-badge">步驟 2</span><strong class="guide-step-name">建立新個案或 AI 智慧辨識（選用）</strong></div>
+            <div class="guide-step-header">
+              <span class="guide-step-badge">步驟 2</span>
+              <strong class="guide-step-name">建立新個案或 AI 智慧辨識（選用）</strong>
+            </div>
             <ul class="guide-step-sublist">
               <li><strong>開新個案</strong>：點擊左側最頂端獨立醒目的紅色「🧹 一鍵開新個案（清空表單）」按鈕，徹底清空表單、大頭照與上傳暫存，確保建立全新個案不遺留舊資料。</li>
               <li><strong>AI 輔助辨識</strong>：點擊「✨ AI 智慧輔助（出院病摘／相關資料自動辨識）」，支援上傳出院病摘、長照定期評估表、交班資料之 <strong>Word (.docx/.doc)、PowerPoint (.pptx/.ppt)、Excel (.xlsx/.xls)、PDF (上限 12MB)、圖片 (JPG/PNG/WebP) 或純文字/CSV</strong>。系統以雙引擎精準提取欄位，AI 分析完成後<strong>中文姓名與外語姓名音譯確實自動帶入</strong>；請護理人員落實雙重核對。</li>
             </ul>
           </li>
           <li class="guide-step-item">
-            <div class="guide-step-header"><span class="guide-step-badge">步驟 3</span><strong class="guide-step-name">檢視或手動調整左側欄位</strong></div>
+            <div class="guide-step-header">
+              <span class="guide-step-badge">步驟 3</span>
+              <strong class="guide-step-name">檢視或手動調整左側欄位</strong>
+            </div>
             <ul class="guide-step-sublist">
               <li><strong>必填與字級規範</strong>：標記紅色 <span class="required">*</span> 為必填欄位；六大照護區塊旗下內容與複選項目已<strong>全面統一固定字級（中文 28px、外語 21px）</strong>，排版清晰不忽大忽小；聽力與視力字體鎖定相同大字級。</li>
               <li><strong>聽力與視力無法判斷時</strong>：若長者因木僵、中風失語、認知退化無法評估，可選擇「其他 (自行輸入)」並填寫簡要描述（如「不知道」、「無法判斷」）。</li>
@@ -828,8 +838,13 @@
             </ul>
           </li>
           <li class="guide-step-item">
-            <div class="guide-step-header"><span class="guide-step-badge">步驟 4</span><strong class="guide-step-name">大頭貼確認與一鍵下載 PDF</strong></div>
-            <p class="guide-step-desc">可於專屬照片區上傳住民照片並進行 334:254 比例裁切（尺寸絕對鎖定）。點擊「📥 下載 PDF」時，系統會自動檢核未完成欄位並以紅色標記提醒，確認後即可產出 A4 橫式單頁資料卡。</p>
+            <div class="guide-step-header">
+              <span class="guide-step-badge">步驟 4</span>
+              <strong class="guide-step-name">大頭貼確認與一鍵下載 PDF</strong>
+            </div>
+            <p class="guide-step-desc">
+              可於專屬照片區上傳住民照片並進行 334:254 比例裁切（尺寸絕對鎖定）。點擊「📥 下載 PDF」時，系統會自動檢核未完成欄位並以紅色標記提醒，確認後即可產出 A4 橫式單頁資料卡。
+            </p>
           </li>
         </ol>
       </section>
@@ -846,7 +861,7 @@
                   <li><strong>右側欄</strong>：🥣 飲食 ➔ 🚽 排泄 ➔ ♿ 輔具與移位（置於右下）。</li>
                 </ul>
               </li>
-              <li><strong>旗下內容與複選項目字級全面統一固定</strong>：
+              <li><strong>旗下內容與複選項目字級全面統一固定</strong>
                 <ul>
                   <li>各照護欄位旗下內容（無論 1 項、2 項或 3 項）<strong>中文一律固定為 28px、外語一律固定為 21px</strong>，徹底消除因字數不同導致同區塊內「字體忽大忽小」的視覺落差。</li>
                   <li><strong>聽力與視力字體鎖定一致</strong>：聽力項目（如「需大聲說話」）固定與視力相同為 28px，不再隨字數縮小。</li>
@@ -907,7 +922,7 @@
           <div class="guide-content">
             <p>點擊頂端「✨ AI 智慧輔助（出院病摘／相關資料自動辨識）」啟動全方位深度解析：</p>
             <ul>
-              <li><strong>介面按鈕與核對面板優化</strong>：
+              <li><strong>介面按鈕與核對面板優化</strong>
                 <ul>
                   <li><strong>「🧹 一鍵開新個案（清空表單）」按鈕</strong>：獨立設置於左側操作欄最頂部，放大字級與按鈕尺寸，獨立醒目，一鍵徹底清除前次個案的表單內容、大頭照與上傳暫存。</li>
                   <li><strong>持續金色發光按鈕「⚡ 一鍵全部切換為 AI 建議值」</strong>：分析完成後，若表單原有手填內容，核對視窗右上角會顯示<strong>持續金色溫暖發光（琥珀金漸層底色＋舒緩雙層金光呼吸＋微光流動）</strong>的切換按鈕，視覺顯眼舒緩不刺眼，方便護理同仁第一時間點擊將保留項全部切換為 AI 建議值。</li>
@@ -916,7 +931,7 @@
                   <li><strong>「清空已選檔案」與「清空已選內容」按鈕</strong>：檔案列表與文字補充區皆設有專屬一鍵清空按鈕，方便迅速重置上傳項目。</li>
                 </ul>
               </li>
-              <li><strong>長照通用表單與醫療病摘深度相容</strong>：
+              <li><strong>長照通用表單與醫療病摘深度相容</strong>
                 <ul>
                   <li><strong>跨格式支援長照表單與交班文件</strong>：全面支援各大長照機構與醫院之<strong>Word (.docx/.doc)、PowerPoint (.pptx/.ppt)、Excel (.xlsx/.xls)、PDF (上限 12MB)、病歷翻拍照 (JPG/PNG/WebP) 及純文字/CSV</strong>，系統自動提取文字與表格進行雙引擎穿透解析。</li>
                   <li><strong>多疾病智慧分級與主要疾病優先套用</strong>：若原始資料、病摘或評估表中列出眾多慢性病史（如 5~10 項以上包含高血脂、痛風、退化性關節炎、骨質疏鬆、失眠、便秘等），系統自動依<strong>「臨床嚴重度與日常照護相關性」智慧分級</strong>（腦中風/重症/心衰竭/洗腎/失智/癌症 ＞ 糖尿病/高血壓/COPD/癲癇 ＞ 次要慢性病），並以明確標註之<strong>主診斷、出院主診斷為最高權重</strong>，優先自動套用最核心之 3 大主要疾病，嚴防次要病史排擠關鍵照護診斷，並於核對視窗詳列篩選與省略明細供護理人員確認。</li>
@@ -926,7 +941,7 @@
                   <li><strong>排泄造口 vs 胃造口（PEG）分流</strong>：胃造口（PEG）屬於飲食形態「胃造口灌食」，絕不誤判為排泄方式的「腸造口照護」；「腸造口照護」嚴格限定於真正具備人工肛門或腸造口之個案。</li>
                 </ul>
               </li>
-              <li><strong>雙引擎架構與最新 AI 模型分析機制</strong>：
+              <li><strong>雙引擎架構與最新 AI 模型分析機制</strong>
                 <ul>
                   <li><strong>最新雲端大模型深度推理（建議啟用）</strong>：設定免費 API Key 後，模型具備<strong>動態視覺注意力</strong>（精準區分手寫勾選 ☑ 與空白印刷題 □，抗手機翻拍傾斜與低對比）、<strong>跨頁時間軸時序推理</strong>（以出院當下最新管路與活動狀態為準，不混淆過去病史）、<strong>否定句與臨床互斥解析</strong>（如「無壓瘡」、「絕對臥床不可無輔具」），並嚴格落實「零臆測事實歸因」，無白紙黑字證據絕不盲目填滿。</li>
                   <li><strong>本機極速離線規則引擎</strong>：未設定 API Key 或無網路時，本機離線規則 0.05 秒瞬時帶入，適合標準文字快速結構化。</li>
@@ -968,7 +983,7 @@
             <p>住民隱私、金鑰管理與臨床覆核責任說明：</p>
             <ul>
               <li><strong>本機純前端運作原則</strong>：本系統沒有後端集中資料庫保存住民病歷與個資；未勾選「允許自動聯網翻譯」且未設定 API Key 時，所有資料皆於瀏覽器端本地離線運算，檔案與文字絕不外傳；使用 AI 雲端分析時，資料直接加密傳輸至 Google Gemini API。</li>
-              <li><strong>API Key 與本機管理密碼</strong>：金鑰只保存在目前瀏覽器的本機儲存空間；更換電腦、瀏覽器或無痕視窗時須重新設定。首次設定金鑰前需建立 4 位數管理密碼；之後進入金鑰設定需先驗證。連續輸入錯誤 3 次會暫時鎖定 1 分鐘。<strong>這是同一台裝置上的入口防護，不等同帳號登入、伺服器端加密或存取權限管理。</strong></li>
+              <li><strong>API Key 本機儲存與跨裝置使用說明</strong>：API Key 採用純前端本機儲存（localStorage）技術，資料僅保存在當前電腦的瀏覽器中，換班使用免重複輸入。<strong>若更換不同電腦、不同瀏覽器或開啟無痕模式，因各環境獨立隔離，需於首次使用時重新設定一次</strong>；系統在點擊「設定 API Key」時啟動「金鑰設定身分驗證」管理密碼鎖定（四位密碼 1236 身分驗證與防暴力破解保護），通過身分驗證後方可進行金鑰檢視、連線測試與儲存，兼顧跨班便利與金鑰隱私安全。</li>
               <li><strong>臨床護理人員最終雙重核對責任</strong>：AI 辨識結果僅供整理排版輔助，護理人員仍具備依機構 SOP、實際住民現況及法定評鑑標準逐項核對修改之最終專業責任。</li>
             </ul>
           </div>
@@ -993,5 +1008,40 @@
   <script src="vendor/pdf.min.js"></script>
   <script src="js/ai-assistant.js"></script>
   <script src="js/app.js"></script>
+
+  <!-- 全域試用鎖定覆蓋層 (唯讀防護) -->
+  <div class="page-lock-overlay" id="pageLockOverlay" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
+    <div class="page-lock-card">
+      <!-- 第一步：輸入密碼 -->
+      <div id="lockStepInput">
+        <div class="page-lock-icon">🔒</div>
+        <h2 class="page-lock-title" id="lockTitle">系統使用已鎖定</h2>
+        <p class="page-lock-desc" id="lockDesc">全域免費開啟 3 次已達上限或 15 分鐘使用時間已到期。<br>頁面目前處於唯讀防護狀態，無法進行點擊或修改。<br>請在下方輸入管理密碼：</p>
+        
+        <div style="margin: 0 0 14px;">
+          <input type="password" id="lockPasswordInput" placeholder="請輸入管理密碼" autocomplete="off" inputmode="numeric" maxlength="12" style="text-align:center;font-size:22px;letter-spacing:6px;padding:12px;border:2.5px solid #d56f22;border-radius:12px;width:100%;box-sizing:border-box;background:#fff;outline:none;">
+        </div>
+        <div id="lockStatusMsg" style="font-size:15px;min-height:22px;margin-bottom:14px;font-weight:800;"></div>
+        <button type="button" class="lock-action-btn" id="lockVerifyPwdBtn" style="background:linear-gradient(135deg, #d56f22, #b5441b);border:none;font-weight:bold;padding:13px;font-size:16px;">
+          🔑 驗證管理密碼
+        </button>
+      </div>
+
+      <!-- 第二步：密碼驗證通過後才出現的選擇視窗 -->
+      <div id="lockStepChoice" style="display: none;">
+        <div class="page-lock-icon" style="background:#e6f8ee;color:#10b981;">🎉</div>
+        <h2 class="page-lock-title" style="color:#0f5132;">密碼驗證成功！</h2>
+        <p class="page-lock-desc">請選擇本次開通方式：</p>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">
+          <button type="button" class="lock-action-btn" id="lockUnlockFreeBtn" style="background:linear-gradient(135deg, #10b981, #059669);border:none;font-weight:bold;padding:13px;font-size:15px;">
+            🟢 此次開通不計算（管理員開通，保留完整 3 次）
+          </button>
+          <button type="button" class="lock-action-btn" id="lockUnlockCountBtn" style="background:linear-gradient(135deg, #d56f22, #b5441b);border:none;font-weight:bold;padding:13px;font-size:15px;">
+            🔑 此次開通仍計算（本次算第 1 次，尚餘 2 次）
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
