@@ -1008,40 +1008,6 @@
   <script src="vendor/pdf.min.js"></script>
   <script src="js/ai-assistant.js"></script>
   <script src="js/app.js"></script>
-
-  <!-- 全域試用鎖定覆蓋層 (唯讀防護) -->
-  <div class="page-lock-overlay" id="pageLockOverlay" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
-    <div class="page-lock-card">
-      <!-- 第一步：輸入密碼 -->
-      <div id="lockStepInput">
-        <div class="page-lock-icon">🔒</div>
-        <h2 class="page-lock-title" id="lockTitle">系統使用已鎖定</h2>
-        <p class="page-lock-desc" id="lockDesc">全域免費開啟 3 次已達上限或 15 分鐘使用時間已到期。<br>頁面目前處於唯讀防護狀態，無法進行點擊或修改。<br>請在下方輸入管理密碼：</p>
-        
-        <div style="margin: 0 0 14px;">
-          <input type="password" id="lockPasswordInput" placeholder="請輸入管理密碼" autocomplete="off" inputmode="numeric" maxlength="12" style="text-align:center;font-size:22px;letter-spacing:6px;padding:12px;border:2.5px solid #d56f22;border-radius:12px;width:100%;box-sizing:border-box;background:#fff;outline:none;">
-        </div>
-        <div id="lockStatusMsg" style="font-size:15px;min-height:22px;margin-bottom:14px;font-weight:800;"></div>
-        <button type="button" class="lock-action-btn" id="lockVerifyPwdBtn" style="background:linear-gradient(135deg, #d56f22, #b5441b);border:none;font-weight:bold;padding:13px;font-size:16px;">
-          🔑 驗證管理密碼
-        </button>
-      </div>
-
-      <!-- 第二步：密碼驗證通過後才出現的選擇視窗 -->
-      <div id="lockStepChoice" style="display: none;">
-        <div class="page-lock-icon" style="background:#e6f8ee;color:#10b981;">🎉</div>
-        <h2 class="page-lock-title" style="color:#0f5132;">密碼驗證成功！</h2>
-        <p class="page-lock-desc">請選擇本次開通方式：</p>
-        <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;">
-          <button type="button" class="lock-action-btn" id="lockUnlockFreeBtn" style="background:linear-gradient(135deg, #10b981, #059669);border:none;font-weight:bold;padding:13px;font-size:15px;">
-            🟢 此次開通不計算（管理員開通，保留完整 3 次）
-          </button>
-          <button type="button" class="lock-action-btn" id="lockUnlockCountBtn" style="background:linear-gradient(135deg, #d56f22, #b5441b);border:none;font-weight:bold;padding:13px;font-size:15px;">
-            🔑 此次開通仍計算（本次算第 1 次，尚餘 2 次）
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </body>
 </html>
