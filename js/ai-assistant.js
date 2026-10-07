@@ -375,8 +375,29 @@ const AiAssistant=(()=>{
         }
       }
       if (clearHeadshotBtn) clearHeadshotBtn.style.display = 'inline-flex';
-      if (statusTxt) statusTxt.textContent = `已選取「${f.name}」作為大頭照；將自動置中裁切並保留完整原圖以供微調。`;
+      if (statusTxt) statusTxt.textContent = `已選取「${f.name}」作為大頭照；已即時套用至卡片預覽並保留完整原圖以供微調。`;
       headshotInput.value = '';
+
+      // ⚡ 立即瞬時套用至主畫面卡片與縮圖，零等待更新！
+      try {
+        const photoSource = await readDataUrl(f);
+        const cr = await crop(f);
+        if (typeof resident !== 'undefined') {
+          resident.photo.src = cr.dataUrl;
+          resident.photo.isPlaceholder = false;
+          if (window.photoCropperInstance?.setSourceDataUrl) {
+            window.photoCropperInstance.setSourceDataUrl(photoSource, cr.cropNorm);
+          }
+          const thumb = $('photo-thumb-img');
+          if (thumb) thumb.src = cr.dataUrl;
+          const btnEdit = $('btn-edit-photo');
+          if (btnEdit) btnEdit.style.display = 'inline-flex';
+          window._isFreshCase = false;
+          window.triggerCardRender?.();
+        }
+      } catch (err) {
+        console.error('即時載入大頭照失敗', err);
+      }
     });
 
     clearHeadshotBtn?.addEventListener('click', () => {
@@ -385,6 +406,16 @@ const AiAssistant=(()=>{
       if (headshotSlot) headshotSlot.textContent = '👤';
       if (clearHeadshotBtn) clearHeadshotBtn.style.display = 'none';
       if (statusTxt) statusTxt.textContent = '若有住民生活照或證件照可在此選取；自動置中裁切並保留完整原圖以供微調。';
+      if (typeof resident !== 'undefined' && typeof PhotoCropper !== 'undefined') {
+        resident.photo.src = PhotoCropper.getDefaultSilhouette();
+        resident.photo.isPlaceholder = true;
+        const thumb = $('photo-thumb-img');
+        if (thumb) thumb.src = resident.photo.src;
+        const btnEdit = $('btn-edit-photo');
+        if (btnEdit) btnEdit.style.display = 'none';
+        if (window.photoCropperInstance?.reset) window.photoCropperInstance.reset();
+        window.triggerCardRender?.();
+      }
     });
   }
   /* ==========================================
@@ -901,6 +932,20 @@ const AiAssistant=(()=>{
         photoCropNorm=cr.cropNorm;
       }catch(err){
         console.error('大頭照裁切失敗',err);
+      }
+    } else if (imageFiles.length > 0 && (!resident?.photo?.src || resident?.photo?.isPlaceholder)) {
+      // ⚡ 若未單獨選專屬大頭照，但在上傳附件中有圖片，優先於 0.05 秒瞬時分析階段套用，絕不卡頓等待雲端！
+      const namedCandidate = imageFiles.find(f => /照|大頭|頭像|住民|個案|portrait|photo|avatar/i.test(f.name));
+      const targetImg = namedCandidate || (imageFiles.length === 1 ? imageFiles[0] : imageFiles[0]);
+      if (targetImg) {
+        try {
+          photoSource = await readDataUrl(targetImg);
+          const cr = await crop(targetImg);
+          photo = cr.dataUrl;
+          photoCropNorm = cr.cropNorm;
+        } catch(err) {
+          console.error('附件候選照片預先裁切失敗', err);
+        }
       }
     }
 
@@ -3119,14 +3164,20 @@ const AiAssistant=(()=>{
       });
 
       // 照片處理：
-      // 若為新個案且未提供新照片，將舊個案的照片重設為預設剪影，防止誤用前位個案大頭照
+      // 若已有上傳照片，僅在確認換不同個案（姓名皆非空且互不相同）且完全無照片時才重設；絕不誤清當前個案已選照片
       const hasExistingPhoto = Boolean(
         typeof resident !== 'undefined' &&
         resident.photo?.src &&
         !resident.photo?.isPlaceholder &&
         $('btn-edit-photo')?.style.display !== 'none'
       );
-      if (isDifferentResident && !photo && hasExistingPhoto) {
+      const isConfirmedDifferentResident = Boolean(
+        d.nameZh && userZh &&
+        d.nameZh !== userZh &&
+        d.nameZh !== '個案姓名待確認' &&
+        userZh !== '個案姓名待確認'
+      );
+      if (isConfirmedDifferentResident && !photo && hasExistingPhoto) {
         if (typeof PhotoCropper !== 'undefined') {
           resident.photo.src = PhotoCropper.getDefaultSilhouette();
           resident.photo.isPlaceholder = true;

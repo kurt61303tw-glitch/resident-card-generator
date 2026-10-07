@@ -372,6 +372,7 @@ function initPhotoCropper() {
     onCropComplete: (dataUrl) => {
       resident.photo.src = dataUrl;
       resident.photo.isPlaceholder = false;
+      if (typeof window !== 'undefined') window._isFreshCase = false;
       const thumb = document.getElementById('photo-thumb-img');
       if (thumb) thumb.src = dataUrl;
       if (btnEditPhoto) btnEditPhoto.style.display = 'inline-flex';
@@ -384,6 +385,70 @@ function initPhotoCropper() {
     btnEditPhoto.addEventListener('click', () => {
       if (photoCropperInstance) {
         photoCropperInstance.openForEdit();
+      }
+    });
+  }
+
+  // 縮圖預覽互動：點選直接上傳或編輯
+  const thumbWrap = document.querySelector('.photo-thumb-preview');
+  if (thumbWrap) {
+    thumbWrap.setAttribute('title', '點擊選擇照片上傳，或直接拖曳圖片至此（已有照片點擊可重新裁切）');
+    thumbWrap.addEventListener('click', () => {
+      if (resident.photo?.src && !resident.photo?.isPlaceholder && photoCropperInstance) {
+        photoCropperInstance.openForEdit();
+      } else {
+        document.getElementById('photo-file-input')?.click();
+      }
+    });
+
+    thumbWrap.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      thumbWrap.classList.add('is-dragover');
+    });
+    thumbWrap.addEventListener('dragleave', () => {
+      thumbWrap.classList.remove('is-dragover');
+    });
+    thumbWrap.addEventListener('drop', (e) => {
+      e.preventDefault();
+      thumbWrap.classList.remove('is-dragover');
+      const file = e.dataTransfer?.files?.[0];
+      if (file && photoCropperInstance) {
+        photoCropperInstance.handleFile(file);
+      }
+    });
+  }
+
+  // 卡片大頭照互動：點選直接上傳或編輯，亦支援拖曳圖片
+  const cardArea = document.getElementById('card-preview-area');
+  if (cardArea) {
+    cardArea.addEventListener('click', (e) => {
+      const box = e.target.closest('.card-photo-box');
+      if (!box) return;
+      if (resident.photo?.src && !resident.photo?.isPlaceholder && photoCropperInstance) {
+        photoCropperInstance.openForEdit();
+      } else {
+        document.getElementById('photo-file-input')?.click();
+      }
+    });
+
+    cardArea.addEventListener('dragover', (e) => {
+      const box = e.target.closest('.card-photo-box');
+      if (!box) return;
+      e.preventDefault();
+      box.classList.add('is-dragover');
+    });
+    cardArea.addEventListener('dragleave', (e) => {
+      const box = e.target.closest('.card-photo-box');
+      if (box) box.classList.remove('is-dragover');
+    });
+    cardArea.addEventListener('drop', (e) => {
+      const box = e.target.closest('.card-photo-box');
+      if (!box) return;
+      e.preventDefault();
+      box.classList.remove('is-dragover');
+      const file = e.dataTransfer?.files?.[0];
+      if (file && photoCropperInstance) {
+        photoCropperInstance.handleFile(file);
       }
     });
   }
@@ -1936,11 +2001,15 @@ function renderCardPreview() {
   const precCardHtml = buildCareSectionHtml('⚠', '注意事項', precZh, precTrans, isMultiLang);
 
 
+  const photoBoxTitle = (resident.photo?.src && !resident.photo?.isPlaceholder)
+    ? '點擊重新裁切或編輯完整原圖'
+    : '點擊選擇照片上傳，或直接拖曳圖片至此';
+
   // 組合整張 A4 卡片內容
   contentEl.innerHTML = `
     <!-- 頂部 Header -->
     <div class="card-header">
-      <div class="card-photo-box">
+      <div class="card-photo-box" title="${photoBoxTitle}">
         <img src="${photoSrc}" alt="住民照片" class="card-photo-img" />
       </div>
       <div class="card-header-content">

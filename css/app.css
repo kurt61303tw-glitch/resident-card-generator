@@ -1853,3 +1853,20 @@ input#input-name-zh.is-unconfirmed,
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
+
+/* 照片縮圖預覽互動反饋 */
+.photo-thumb-preview {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.photo-thumb-preview:hover {
+  border-color: #16a34a !important;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+
+.photo-thumb-preview.is-dragover {
+  border-color: #15803d !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35) !important;
+  background-color: #f0fdf4 !important;
+}

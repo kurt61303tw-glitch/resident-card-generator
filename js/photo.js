@@ -114,8 +114,7 @@ class PhotoCropper {
     }
   }
 
-  handleFileSelect(e) {
-    const file = e.target.files && e.target.files[0];
+  handleFile(file) {
     if (!file) return;
 
     if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/i)) {
@@ -134,13 +133,62 @@ class PhotoCropper {
       img.onload = () => {
         if (loadVersion !== this.imageLoadVersion) return;
         this.currentImage = img;
-        this.openModal();
         this.fitImageToCanvas();
+
+        // ⚡ 立即樂觀套用至卡片與縮圖，使用者選完照片 0 秒瞬時呈現上傳結果！
+        try {
+          const quickDataUrl = this.getQuickCropDataUrl();
+          if (quickDataUrl && typeof this.onCropComplete === 'function') {
+            this.onCropComplete(quickDataUrl);
+          }
+          if (typeof window !== 'undefined') {
+            window._isFreshCase = false;
+          }
+        } catch (err) {
+          console.warn('快速套用預覽異常:', err);
+        }
+
+        // 開啟微調裁切視窗，使用者可選擇微調或關閉（照片皆已安全套用）
+        this.openModal();
       };
       img.src = dataUrl;
     };
     reader.readAsDataURL(file);
+  }
+
+  handleFileSelect(e) {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      this.handleFile(file);
+    }
     e.target.value = '';
+  }
+
+  getQuickCropDataUrl() {
+    if (!this.currentImage) return null;
+    const img = this.currentImage;
+    const ratio = this.targetAspect; // 334 / 254
+    let sw = img.width;
+    let sh = img.height;
+    let sx = 0;
+    let sy = 0;
+
+    if (sw / sh > ratio) {
+      sw = Math.round(sh * ratio);
+      sx = Math.round((img.width - sw) / 2);
+    } else {
+      sh = Math.round(sw / ratio);
+      sy = Math.round((img.height - sh) / 2);
+    }
+
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = this.outputWidth;
+    outCanvas.height = this.outputHeight;
+    const outCtx = outCanvas.getContext('2d');
+    outCtx.fillStyle = '#ffffff';
+    outCtx.fillRect(0, 0, this.outputWidth, this.outputHeight);
+    outCtx.drawImage(img, sx, sy, sw, sh, 0, 0, this.outputWidth, this.outputHeight);
+    return outCanvas.toDataURL('image/jpeg', 0.92);
   }
 
   openModal() {
@@ -754,6 +802,9 @@ class PhotoCropper {
    * 產生大字清晰之佔位圖 (Base64 JPEG，維持 80px 超大粗體醒目)
    */
   static getDefaultSilhouette() {
+    if (PhotoCropper._cachedSilhouette) {
+      return PhotoCropper._cachedSilhouette;
+    }
     const canvas = document.createElement('canvas');
     canvas.width = 668;
     canvas.height = 508;
@@ -833,7 +884,8 @@ class PhotoCropper {
     ctx.textBaseline = 'middle';
     ctx.fillText(text, 334, badgeY + badgeH / 2 + 2);
 
-    return canvas.toDataURL('image/jpeg', 0.95);
+    PhotoCropper._cachedSilhouette = canvas.toDataURL('image/jpeg', 0.95);
+    return PhotoCropper._cachedSilhouette;
   }
 }
 
