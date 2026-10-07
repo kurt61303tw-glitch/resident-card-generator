@@ -118,11 +118,7 @@ const FitEngine = {
     }
 
     if (warningBannerEl) {
-      if (state === 'overflow') {
-        warningBannerEl.style.display = 'flex';
-      } else {
-        warningBannerEl.style.display = 'none';
-      }
+      warningBannerEl.style.display = 'none';
     }
   },
 

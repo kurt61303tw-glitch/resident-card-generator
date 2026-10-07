@@ -1870,3 +1870,9 @@ input#input-name-zh.is-unconfirmed,
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35) !important;
   background-color: #f0fdf4 !important;
 }
+
+/* 永遠隱藏內容過多警告橫幅（狀態統由預覽列標籤呈現） */
+#fit-warning-banner,
+.fit-warning-banner {
+  display: none !important;
+}
