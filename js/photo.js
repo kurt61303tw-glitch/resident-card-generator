@@ -133,6 +133,10 @@ class PhotoCropper {
       img.onload = () => {
         if (loadVersion !== this.imageLoadVersion) return;
         this.currentImage = img;
+
+        // openModal() 會設定 canvas 的寬高；canvas 重設會清空已繪製內容，
+        // 因此必須先開窗、再計算並繪製，不能反過來。
+        this.openModal();
         this.fitImageToCanvas();
 
         // ⚡ 立即樂觀套用至卡片與縮圖，使用者選完照片 0 秒瞬時呈現上傳結果！
@@ -147,9 +151,6 @@ class PhotoCropper {
         } catch (err) {
           console.warn('快速套用預覽異常:', err);
         }
-
-        // 開啟微調裁切視窗，使用者可選擇微調或關閉（照片皆已安全套用）
-        this.openModal();
       };
       img.src = dataUrl;
     };
